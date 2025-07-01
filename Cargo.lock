@@ -1434,30 +1434,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "docbox-search"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74753d6975d9eb05814a537e8216e2c8ff2435076065505e100fa01dcba0e6e9"
-dependencies = [
- "anyhow",
- "aws-config",
- "chrono",
- "docbox-database",
- "garde",
- "itertools 0.14.0",
- "mime",
- "opensearch",
- "reqwest",
- "serde",
- "serde_json",
- "serde_with",
- "tracing",
- "utoipa",
- "uuid",
-]
-
-[[package]]
-name = "docbox-tenant-manager"
+name = "docbox-manager"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1478,6 +1455,29 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "docbox-search"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74753d6975d9eb05814a537e8216e2c8ff2435076065505e100fa01dcba0e6e9"
+dependencies = [
+ "anyhow",
+ "aws-config",
+ "chrono",
+ "docbox-database",
+ "garde",
+ "itertools 0.14.0",
+ "mime",
+ "opensearch",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tracing",
+ "utoipa",
+ "uuid",
 ]
 
 [[package]]
