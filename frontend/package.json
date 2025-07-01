@@ -13,6 +13,7 @@
     "check": "biome check"
   },
   "dependencies": {
+    "@tanstack/react-form": "^1.12.4",
     "@tanstack/react-query": "^5.66.5",
     "@tanstack/react-query-devtools": "^5.66.5",
     "@tanstack/react-router": "^1.121.2",
@@ -20,6 +21,7 @@
     "@tanstack/router-plugin": "^1.121.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "zod": "^3.25.67",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
