@@ -14,8 +14,8 @@ export function InitializeGuard({ children }: PropsWithChildren<{}>) {
     return <LoadingPage />;
   }
 
-  const authenticated = data ?? false;
-  if (!authenticated) {
+  const initialized = data ?? false;
+  if (!initialized) {
     return <InitializePage />;
   }
 

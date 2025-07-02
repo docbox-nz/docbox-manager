@@ -14,6 +14,7 @@ use docbox_database::{
     create::{create_database, create_restricted_role, create_tenants_table},
     migrations::apply_tenant_migrations,
     models::tenant::Tenant,
+    sqlx::types::Uuid,
 };
 
 use rand::{Rng, distributions::Alphanumeric, rngs::OsRng};
@@ -25,13 +26,29 @@ use serde_json::json;
 pub async fn is_initialized(
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
 ) -> HttpResult<IsInitializedResponse> {
-    // Try connect to the docbox database
-    if let Err(err) = db_provider.connect(ROOT_DATABASE_NAME).await {
-        if !err.as_database_error().is_some_and(|err| {
-            err.code()
-                .is_some_and(|code| code.to_string().eq("42P01" /* Database does not exist */))
+    let db = match db_provider.connect(ROOT_DATABASE_NAME).await {
+        Ok(value) => value,
+        Err(error) => {
+            if !error.as_database_error().is_some_and(|error| {
+                error.code().is_some_and(|code| {
+                    code.to_string().eq("3D000" /* Database does not exist */)
+                })
+            }) {
+                return Err(anyhow::Error::new(error).into());
+            }
+
+            // Database is not setup, server is not initialized
+            return Ok(Json(IsInitializedResponse { initialized: false }));
+        }
+    };
+
+    if let Err(error) = Tenant::find_by_id(&db, Uuid::nil(), "__DO_NOT_USE").await {
+        if !error.as_database_error().is_some_and(|error| {
+            error.code().is_some_and(|code| {
+                code.to_string().eq("42P01" /* Table does not exist */)
+            })
         }) {
-            return Err(anyhow::Error::new(err).into());
+            return Err(anyhow::Error::new(error).into());
         }
 
         // Database is not setup, server is not initialized

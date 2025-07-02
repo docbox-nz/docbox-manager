@@ -89,6 +89,7 @@ pub async fn create(
         &storage_factory,
         docbox_core::tenant::create_tenant::CreateTenant {
             id: tenant_config.id,
+            name: tenant_config.name,
             db_name: tenant_config.db_name,
             db_secret_name: tenant_config.db_secret_name,
             s3_name: tenant_config.s3_name,
@@ -112,7 +113,6 @@ pub async fn create(
 /// Get all tenants
 pub async fn get_all(
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
-    Path(env): Path<String>,
 ) -> Result<Json<Vec<Tenant>>, DynHttpError> {
     // Connect to the docbox database
     let db_docbox = db_provider
@@ -121,9 +121,9 @@ pub async fn get_all(
         .context("failed to connect to docbox database")?;
 
     // Get the tenant details
-    let tenant = Tenant::find_by_env(&db_docbox, &env)
+    let tenant = Tenant::all(&db_docbox)
         .await
-        .context("failed to request tenant")?;
+        .context("failed to request tenants")?;
     tracing::debug!(?tenant, "found tenant");
 
     Ok(Json(tenant))

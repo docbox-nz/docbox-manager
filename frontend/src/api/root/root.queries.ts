@@ -6,5 +6,6 @@ export function useInitialized() {
   return useQuery({
     queryKey: rootKeys.isInitialized,
     queryFn: isInitialized,
+    select: (data) => data.initialized,
   });
 }

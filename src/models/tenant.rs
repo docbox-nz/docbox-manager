@@ -7,6 +7,8 @@ pub struct CreateTenant {
     /// Unique ID for the tenant
     pub id: TenantId,
 
+    pub name: String,
+
     /// Database name for the tenant
     pub db_name: String,
 

@@ -14,13 +14,13 @@ tower-http = { version = "=0.6.6", features = ["limit", "cors", "trace"] }
 dotenvy = "=0.15.7"
 
 # Core business logic
-docbox-core = "0.1.0"
+docbox-core = { version = "0.1.0", path = "../docbox/packages/docbox-core" }
 
 # Database access
-docbox-database = "0.1.0"
+docbox-database = { version = "0.1.0", path = "../docbox/packages/docbox-database" }
 
 # Search access
-docbox-search = "0.1.0"
+docbox-search = { version = "0.1.0", path = "../docbox/packages/docbox-search" }
 
 # Asynchronous runtime & Helpers
 tokio = { version = "=1.45.1", features = ["full"] }
