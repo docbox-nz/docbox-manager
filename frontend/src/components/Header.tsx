@@ -1,28 +1,33 @@
 import { useLogout } from "@/api/auth/auth.mutations";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import { Link } from "@tanstack/react-router";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 
 export default function Header() {
   const logoutMutation = useLogout();
 
   return (
-    <header className="p-2 flex gap-2 bg-white text-black justify-between">
-      <nav className="flex flex-row">
-        <div className="px-2 font-bold">
-          <Link to="/">Home</Link>
-        </div>
-
-        <div className="px-2 font-bold">
-          <Link to="/demo/tanstack-query">TanStack Query</Link>
-        </div>
-
-        <Button
-          onClick={() => logoutMutation.mutate()}
-          loading={logoutMutation.isPending}
+    <AppBar position="static">
+      <Toolbar>
+        <Box component="img" src="/box.svg" width={32} height={32} />
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ ml: 1, flexGrow: 1, display: { xs: "none", sm: "block" } }}
         >
-          Logout
-        </Button>
-      </nav>
-    </header>
+          Docbox Manager
+        </Typography>
+        <Box sx={{ display: "flex" }}>
+          <Button
+            onClick={() => logoutMutation.mutate()}
+            loading={logoutMutation.isPending}
+          >
+            Logout
+          </Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }
