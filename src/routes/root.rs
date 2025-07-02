@@ -1,5 +1,11 @@
 use std::sync::Arc;
 
+use crate::{
+    DatabaseProvider,
+    config::DatabaseConfig,
+    error::{DynHttpError, HttpResult},
+    models::root::{IsInitializedResponse, MigrateRequest},
+};
 use anyhow::Context;
 use axum::{Extension, Json, http::StatusCode};
 use docbox_core::secrets::AppSecretManager;
@@ -9,21 +15,16 @@ use docbox_database::{
     migrations::apply_tenant_migrations,
     models::tenant::Tenant,
 };
-use serde_json::json;
 
-use crate::{
-    DatabaseProvider,
-    config::DatabaseConfig,
-    error::DynHttpError,
-    models::root::{InitializeRequest, MigrateRequest},
-};
+use rand::{Rng, distributions::Alphanumeric, rngs::OsRng};
+use serde_json::json;
 
 /// GET /root/initialized
 ///
 /// Check if the server has been initialized
 pub async fn is_initialized(
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
-) -> Result<StatusCode, DynHttpError> {
+) -> HttpResult<IsInitializedResponse> {
     // Try connect to the docbox database
     if let Err(err) = db_provider.connect(ROOT_DATABASE_NAME).await {
         if !err.as_database_error().is_some_and(|err| {
@@ -32,9 +33,24 @@ pub async fn is_initialized(
         }) {
             return Err(anyhow::Error::new(err).into());
         }
+
+        // Database is not setup, server is not initialized
+        return Ok(Json(IsInitializedResponse { initialized: false }));
     }
 
-    Ok(StatusCode::OK)
+    Ok(Json(IsInitializedResponse { initialized: true }))
+}
+
+/// Generates a random password
+fn random_password(length: usize) -> anyhow::Result<String> {
+    let mut rng = OsRng;
+    let mut password: Vec<u8> = Vec::with_capacity(length);
+
+    for _ in 0..length {
+        password.push(rng.sample(Alphanumeric));
+    }
+
+    Ok(String::from_utf8(password)?)
 }
 
 /// POST /root/initialize
@@ -47,7 +63,6 @@ pub async fn initialize(
     Extension(database_config): Extension<Arc<DatabaseConfig>>,
     Extension(secrets): Extension<Arc<AppSecretManager>>,
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
-    Json(request): Json<InitializeRequest>,
 ) -> Result<StatusCode, DynHttpError> {
     // Connect to the root postgres database
     let db_root = db_provider
@@ -71,20 +86,23 @@ pub async fn initialize(
         .await
         .context("failed to connect to docbox database")?;
 
+    let root_role_name = "docbox_config_api";
+    let root_password = random_password(30).context("failed to generate password")?;
+
     // Setup the restricted root db role
     create_restricted_role(
         &db_docbox,
         ROOT_DATABASE_NAME,
-        &request.root_role_name,
-        &request.root_role_password,
+        root_role_name,
+        &root_password,
     )
     .await
     .context("failed to setup root user")?;
     tracing::info!("created root user");
 
     let secret_value = serde_json::to_string(&json!({
-        "username": request.root_role_name,
-        "password": request.root_role_password
+        "username": root_role_name,
+        "password": root_password
     }))
     .context("failed to encode secret")?;
 
