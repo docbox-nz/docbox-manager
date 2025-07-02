@@ -9,7 +9,7 @@ export default function Header() {
   const logoutMutation = useLogout();
 
   return (
-    <AppBar position="static">
+    <AppBar position="sticky">
       <Toolbar>
         <Box component="img" src="/box.svg" width={32} height={32} />
         <Typography

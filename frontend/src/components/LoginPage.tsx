@@ -3,7 +3,6 @@ import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
-import TextField from "@mui/material/TextField";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
@@ -12,6 +11,7 @@ import Alert from "@mui/material/Alert";
 import { getAPIErrorMessage } from "@/api/axios";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
+import { FormTextField } from "./form/FormTextField";
 
 export default function LoginPage() {
   const authenticateMutation = useAuthenticate();
@@ -72,23 +72,12 @@ export default function LoginPage() {
               <form.Field
                 name="password"
                 children={(field) => (
-                  <TextField
+                  <FormTextField
+                    field={field}
                     variant="outlined"
                     size="medium"
                     label="Password"
                     type="password"
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    error={!field.state.meta.isValid}
-                    helperText={
-                      field.state.meta.isValid
-                        ? undefined
-                        : field.state.meta.errors
-                            .map((error) => error?.message)
-                            .join(", ")
-                    }
                   />
                 )}
               />
