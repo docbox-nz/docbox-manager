@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use axum::{Extension, Json, http::StatusCode};
-use docbox_core::{aws::aws_config, secrets::AppSecretManager};
+use docbox_core::secrets::AppSecretManager;
 use docbox_database::{
     DbPool, ROOT_DATABASE_NAME,
     create::{create_database, create_restricted_role, create_tenants_table},
@@ -11,24 +11,21 @@ use docbox_database::{
 };
 use serde_json::json;
 
-use crate::{config::Config, connect_db, error::DynHttpError, models::root::MigrateRequest};
+use crate::{
+    DatabaseProvider,
+    config::DatabaseConfig,
+    error::DynHttpError,
+    models::root::{InitializeRequest, MigrateRequest},
+};
 
 /// GET /root/initialized
 ///
 /// Check if the server has been initialized
 pub async fn is_initialized(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
 ) -> Result<StatusCode, DynHttpError> {
     // Try connect to the docbox database
-    if let Err(err) = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    {
+    if let Err(err) = db_provider.connect(ROOT_DATABASE_NAME).await {
         if !err.as_database_error().is_some_and(|err| {
             err.code()
                 .is_some_and(|code| code.to_string().eq("42P01" /* Database does not exist */))
@@ -42,24 +39,21 @@ pub async fn is_initialized(
 
 /// POST /root/initialize
 ///
-/// Initialize the root database
+/// - Create the root database
+/// - Setup the root database role
+/// - Store the root database credentials
+/// - Setup the root database
 pub async fn initialize(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(database_config): Extension<Arc<DatabaseConfig>>,
+    Extension(secrets): Extension<Arc<AppSecretManager>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
+    Json(request): Json<InitializeRequest>,
 ) -> Result<StatusCode, DynHttpError> {
-    // Load AWS configuration
-    let aws_config = aws_config().await;
-    let secrets = AppSecretManager::from_config(&aws_config, config.secrets.clone());
-
     // Connect to the root postgres database
-    let db_root = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        "postgres",
-    )
-    .await
-    .context("failed to connect to postgres database")?;
+    let db_root = db_provider
+        .connect("postgres")
+        .await
+        .context("failed to connect to postgres database")?;
 
     // Create the tenant database
     if let Err(err) = create_database(&db_root, ROOT_DATABASE_NAME).await {
@@ -72,35 +66,30 @@ pub async fn initialize(
     }
 
     // Connect to the docbox database
-    let db_docbox = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    .context("failed to connect to docbox database")?;
+    let db_docbox = db_provider
+        .connect(ROOT_DATABASE_NAME)
+        .await
+        .context("failed to connect to docbox database")?;
 
     // Setup the restricted root db role
     create_restricted_role(
         &db_docbox,
         ROOT_DATABASE_NAME,
-        &config.database.root_role_name,
-        &config.database.root_secret_password,
+        &request.root_role_name,
+        &request.root_role_password,
     )
     .await
     .context("failed to setup root user")?;
     tracing::info!("created root user");
 
     let secret_value = serde_json::to_string(&json!({
-        "username": config.database.root_role_name,
-        "password": config.database.root_secret_password
+        "username": request.root_role_name,
+        "password": request.root_role_password
     }))
     .context("failed to encode secret")?;
 
     secrets
-        .create_secret(&config.database.root_secret_name, &secret_value)
+        .create_secret(&database_config.root_secret_name, &secret_value)
         .await?;
 
     tracing::info!("created database secret");
@@ -113,20 +102,18 @@ pub async fn initialize(
     Ok(StatusCode::CREATED)
 }
 
+/// POST /root/migrate
+///
+/// Applies migrations against all tenants
 pub async fn migrate(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
     Json(migrate): Json<MigrateRequest>,
 ) -> Result<StatusCode, DynHttpError> {
     // Connect to the root database
-    let root_db = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    .context("failed to connect to root database")?;
+    let root_db = db_provider
+        .connect(ROOT_DATABASE_NAME)
+        .await
+        .context("failed to connect to root database")?;
 
     // Load tenants from the database
     let tenants = Tenant::all(&root_db)
@@ -156,7 +143,7 @@ pub async fn migrate(
     let mut applied_tenants = Vec::new();
 
     for tenant in tenants {
-        let result = migrate_tenant(&config, &root_db, &tenant).await;
+        let result = migrate_tenant(&db_provider, &root_db, &tenant).await;
         match result {
             Ok(_) => {
                 applied_tenants.push((tenant.env, tenant.id));
@@ -177,7 +164,7 @@ pub async fn migrate(
 }
 
 pub async fn migrate_tenant(
-    config: &Config,
+    db_provider: &DatabaseProvider,
     root_db: &DbPool,
     tenant: &Tenant,
 ) -> anyhow::Result<()> {
@@ -188,15 +175,10 @@ pub async fn migrate_tenant(
     );
 
     // Connect to the tenant database
-    let tenant_db = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        &tenant.db_name,
-    )
-    .await
-    .context("failed to connect to tenant database")?;
+    let tenant_db = db_provider
+        .connect(&tenant.db_name)
+        .await
+        .context("failed to connect to tenant database")?;
 
     let mut root_t = root_db.begin().await?;
     let mut t = tenant_db.begin().await?;

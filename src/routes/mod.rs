@@ -3,13 +3,21 @@ use axum::{
     routing::{get, post},
 };
 
+use crate::auth::auth_middleware;
+
 pub mod root;
 pub mod tenant;
 
 pub fn router() -> Router {
     Router::new()
-        .nest("/tenant", tenant_router())
-        .nest("/root", root_router())
+        .nest("/auth", todo!("AUTH ROUTES"))
+        // Authenticated routes
+        .merge(
+            Router::new()
+                .nest("/tenant", tenant_router())
+                .nest("/root", root_router())
+                .layer(axum::middleware::from_fn(auth_middleware)),
+        )
 }
 
 pub fn root_router() -> Router {
@@ -26,4 +34,5 @@ pub fn tenant_router() -> Router {
             "/{env}/{tenant_id}",
             get(tenant::get).delete(tenant::delete),
         )
+    // TODO: Docbox forwarding route
 }

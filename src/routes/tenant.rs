@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use axum::{Extension, Json, extract::Path, http::StatusCode};
-use docbox_core::{aws::aws_config, secrets::AppSecretManager, storage::StorageLayerFactory};
+use docbox_core::{secrets::AppSecretManager, storage::StorageLayerFactory};
 use docbox_database::{
     ROOT_DATABASE_NAME,
     create::{create_database, create_restricted_role},
@@ -12,27 +12,25 @@ use docbox_database::{
 use docbox_search::SearchIndexFactory;
 use serde_json::json;
 
-use crate::{config::Config, connect_db, error::DynHttpError, models::tenant::CreateTenant};
+use crate::{DatabaseProvider, error::DynHttpError, models::tenant::CreateTenant};
 
+/// POST /tenant/create
+///
+/// Create a new tenant
 pub async fn create(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
+    Extension(search_factory): Extension<Arc<SearchIndexFactory>>,
+    Extension(storage_factory): Extension<Arc<StorageLayerFactory>>,
+    Extension(secrets): Extension<Arc<AppSecretManager>>,
     Json(tenant_config): Json<CreateTenant>,
 ) -> Result<StatusCode, DynHttpError> {
     tracing::debug!(?tenant_config, "creating tenant");
 
-    // Load AWS configuration
-    let aws_config = aws_config().await;
-
     // Connect to the "postgres" database to use while creating the tenant database
-    let db_postgres = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        "postgres",
-    )
-    .await
-    .context("failed to connect to docbox database")?;
+    let db_postgres = db_provider
+        .connect("postgres")
+        .await
+        .context("failed to connect to docbox database")?;
 
     // Create the tenant database
     if let Err(err) = create_database(&db_postgres, &tenant_config.db_name).await {
@@ -48,26 +46,16 @@ pub async fn create(
     tracing::info!("created tenant database");
 
     // Connect to the root database
-    let root_db = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    .context("failed to connect to root database")?;
+    let root_db = db_provider
+        .connect(ROOT_DATABASE_NAME)
+        .await
+        .context("failed to connect to root database")?;
 
     // Connect to the tenant database
-    let tenant_db = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        &tenant_config.db_name,
-    )
-    .await
-    .context("failed to connect to tenant database")?;
+    let tenant_db = db_provider
+        .connect(&tenant_config.db_name)
+        .await
+        .context("failed to connect to tenant database")?;
 
     // Setup the tenant user
     create_restricted_role(
@@ -87,15 +75,11 @@ pub async fn create(
     }))
     .context("failed to encode secret")?;
 
-    let secrets = AppSecretManager::from_config(&aws_config, config.secrets.clone());
     secrets
         .create_secret(&tenant_config.db_secret_name, &secret_value)
         .await?;
 
     tracing::info!("created database secret");
-
-    let search_factory = SearchIndexFactory::from_config(&aws_config, config.search.clone())?;
-    let storage_factory = StorageLayerFactory::from_config(&aws_config, config.storage.clone());
 
     // Attempt to initialize the tenant
     let tenant = docbox_core::tenant::create_tenant::create_tenant(
@@ -123,20 +107,18 @@ pub async fn create(
     Ok(StatusCode::CREATED)
 }
 
+/// GET /tenant
+///
+/// Get all tenants
 pub async fn get_all(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
     Path(env): Path<String>,
 ) -> Result<Json<Vec<Tenant>>, DynHttpError> {
     // Connect to the docbox database
-    let db_docbox = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    .context("failed to connect to docbox database")?;
+    let db_docbox = db_provider
+        .connect(ROOT_DATABASE_NAME)
+        .await
+        .context("failed to connect to docbox database")?;
 
     // Get the tenant details
     let tenant = Tenant::find_by_env(&db_docbox, &env)
@@ -147,20 +129,18 @@ pub async fn get_all(
     Ok(Json(tenant))
 }
 
+/// GET /tenant/{env}/{id}
+///
+/// Get a specific tenant
 pub async fn get(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
     Path((env, tenant_id)): Path<(String, Uuid)>,
 ) -> Result<Json<Tenant>, DynHttpError> {
     // Connect to the docbox database
-    let db_docbox = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    .context("failed to connect to docbox database")?;
+    let db_docbox = db_provider
+        .connect(ROOT_DATABASE_NAME)
+        .await
+        .context("failed to connect to docbox database")?;
 
     // Get the tenant details
     let tenant = Tenant::find_by_id(&db_docbox, tenant_id, &env)
@@ -172,20 +152,18 @@ pub async fn get(
     Ok(Json(tenant))
 }
 
+/// DELETE /tenant/{env}/{id}
+///
+/// Delete a specific tenant
 pub async fn delete(
-    Extension(config): Extension<Arc<Config>>,
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
     Path((env, tenant_id)): Path<(String, Uuid)>,
 ) -> Result<StatusCode, DynHttpError> {
     // Connect to the docbox database
-    let db_docbox = connect_db(
-        &config.database.host,
-        config.database.port,
-        &config.database.setup_user.username,
-        &config.database.setup_user.password,
-        ROOT_DATABASE_NAME,
-    )
-    .await
-    .context("failed to connect to docbox database")?;
+    let db_docbox = db_provider
+        .connect(ROOT_DATABASE_NAME)
+        .await
+        .context("failed to connect to docbox database")?;
 
     // Get the tenant details
     let tenant = Tenant::find_by_id(&db_docbox, tenant_id, &env)

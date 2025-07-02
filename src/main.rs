@@ -1,15 +1,20 @@
+use crate::{config::DatabaseConfig, routes::router};
+use axum::Extension;
+use docbox_core::{
+    aws::aws_config,
+    secrets::{AppSecretManager, SecretsManagerConfig},
+    storage::{StorageLayerFactory, StorageLayerFactoryConfig},
+};
+use docbox_database::{DbResult, PgConnectOptions, PgPool};
+use docbox_search::{SearchIndexFactory, SearchIndexFactoryConfig};
 use std::{
     net::{Ipv4Addr, SocketAddr, SocketAddrV4},
     sync::Arc,
 };
-
-use anyhow::Context;
-use axum::{Extension, Router};
-use docbox_database::{DbResult, PgConnectOptions, PgPool};
 use tower_http::trace::TraceLayer;
+use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer, cookie::time::Duration};
 
-use crate::{config::Config, routes::router};
-
+mod auth;
 mod config;
 mod error;
 mod models;
@@ -30,9 +35,25 @@ fn main() -> anyhow::Result<()> {
 }
 
 async fn server() -> anyhow::Result<()> {
-    // Load the create tenant config
-    let config_raw = tokio::fs::read("config.json").await?;
-    let config: Config = serde_json::from_slice(&config_raw).context("failed to parse config")?;
+    let session_store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_secure(false)
+        .with_expiry(Expiry::OnInactivity(Duration::minutes(30)));
+
+    // Load AWS configuration
+    let aws_config = aws_config().await;
+
+    let database_config = DatabaseConfig::from_env()?;
+
+    // Initialize factories
+    let secrets = AppSecretManager::from_config(&aws_config, SecretsManagerConfig::from_env()?);
+    let search_factory =
+        SearchIndexFactory::from_config(&aws_config, SearchIndexFactoryConfig::from_env()?)?;
+    let storage_factory =
+        StorageLayerFactory::from_config(&aws_config, StorageLayerFactoryConfig::from_env()?);
+    let database_provider = DatabaseProvider {
+        config: database_config.clone(),
+    };
 
     // Setup router
     let app = router();
@@ -45,7 +66,12 @@ async fn server() -> anyhow::Result<()> {
 
     // Setup app layers and extension
     let app = app
-        .layer(Extension(Arc::new(config)))
+        .layer(Extension(Arc::new(database_config)))
+        .layer(Extension(Arc::new(database_provider)))
+        .layer(Extension(Arc::new(secrets)))
+        .layer(Extension(Arc::new(search_factory)))
+        .layer(Extension(Arc::new(storage_factory)))
+        .layer(session_layer)
         .layer(TraceLayer::new_for_http());
 
     // Development mode CORS access for local browser testing
@@ -84,4 +110,21 @@ async fn connect_db(
         .database(database);
 
     PgPool::connect_with(options).await
+}
+
+pub struct DatabaseProvider {
+    config: DatabaseConfig,
+}
+
+impl DatabaseProvider {
+    pub async fn connect(&self, database: &str) -> DbResult<PgPool> {
+        connect_db(
+            &self.config.host,
+            self.config.port,
+            &self.config.username,
+            &self.config.password,
+            database,
+        )
+        .await
+    }
 }

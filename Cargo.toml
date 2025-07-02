@@ -47,3 +47,4 @@ itertools = "=0.14.0"
 
 # AWS configuration
 aws-config = { version = "=1.8.0", features = ["behavior-version-latest"] }
+tower-sessions = "0.14.0"
