@@ -5,5 +5,5 @@ export const Route = createFileRoute("/")({
 });
 
 function App() {
-  return <div></div>;
+  return <div>You're logged in!</div>;
 }

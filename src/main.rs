@@ -20,12 +20,13 @@ use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer, cookie::time::Dur
 mod auth;
 mod config;
 mod error;
+mod logging;
 mod models;
 mod routes;
 
 /// Default server address when not specified
 const DEFAULT_SERVER_ADDRESS: SocketAddr =
-    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 8080));
+    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 9090));
 
 fn main() -> anyhow::Result<()> {
     _ = dotenvy::dotenv();
@@ -38,6 +39,8 @@ fn main() -> anyhow::Result<()> {
 }
 
 async fn server() -> anyhow::Result<()> {
+    logging::init_logging()?;
+
     let session_store = MemoryStore::default();
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false)
@@ -63,7 +66,7 @@ async fn server() -> anyhow::Result<()> {
     let app = router();
 
     // Determine the socket address to bind against
-    let server_address = std::env::var("SERVER_ADDRESS")
+    let server_address = std::env::var("DOCBOX_MANAGER_SERVER_ADDRESS")
         .ok()
         .and_then(|value| value.parse::<SocketAddr>().ok())
         .unwrap_or(DEFAULT_SERVER_ADDRESS);

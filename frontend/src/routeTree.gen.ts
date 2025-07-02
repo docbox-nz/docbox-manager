@@ -9,17 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as InitializeRouteImport } from './routes/initialize'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TenantCreateRouteImport } from './routes/tenant.create'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const InitializeRoute = InitializeRouteImport.update({
   id: '/initialize',
   path: '/initialize',
@@ -44,14 +38,12 @@ const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/initialize': typeof InitializeRoute
-  '/login': typeof LoginRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/tenant/create': typeof TenantCreateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/initialize': typeof InitializeRoute
-  '/login': typeof LoginRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/tenant/create': typeof TenantCreateRoute
 }
@@ -59,25 +51,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/initialize': typeof InitializeRoute
-  '/login': typeof LoginRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/tenant/create': typeof TenantCreateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/initialize'
-    | '/login'
-    | '/demo/tanstack-query'
-    | '/tenant/create'
+  fullPaths: '/' | '/initialize' | '/demo/tanstack-query' | '/tenant/create'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/initialize' | '/login' | '/demo/tanstack-query' | '/tenant/create'
+  to: '/' | '/initialize' | '/demo/tanstack-query' | '/tenant/create'
   id:
     | '__root__'
     | '/'
     | '/initialize'
-    | '/login'
     | '/demo/tanstack-query'
     | '/tenant/create'
   fileRoutesById: FileRoutesById
@@ -85,20 +70,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InitializeRoute: typeof InitializeRoute
-  LoginRoute: typeof LoginRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   TenantCreateRoute: typeof TenantCreateRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/initialize': {
       id: '/initialize'
       path: '/initialize'
@@ -133,7 +110,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InitializeRoute: InitializeRoute,
-  LoginRoute: LoginRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   TenantCreateRoute: TenantCreateRoute,
 }

@@ -2,6 +2,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import CssBaseline from "@mui/material/CssBaseline";
 
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -14,6 +15,8 @@ import { routeTree } from "./routeTree.gen";
 
 import "./styles.css";
 import reportWebVitals from "./reportWebVitals.ts";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { AuthGuard } from "./components/AuthGuard.tsx";
 
 // Create a new router instance
 const router = createRouter({
@@ -25,6 +28,12 @@ const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+});
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+  },
 });
 
 // Register the router instance for type safety
@@ -40,9 +49,15 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <TanStackQueryProvider.Provider>
-        <RouterProvider router={router} />
-      </TanStackQueryProvider.Provider>
+      <ThemeProvider theme={darkTheme}>
+        <TanStackQueryProvider.Provider>
+          <AuthGuard>
+            <RouterProvider router={router} />
+          </AuthGuard>
+        </TanStackQueryProvider.Provider>
+
+        <CssBaseline enableColorScheme />
+      </ThemeProvider>
     </StrictMode>
   );
 }
