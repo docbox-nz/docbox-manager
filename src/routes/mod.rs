@@ -5,12 +5,13 @@ use axum::{
 
 use crate::auth::auth_middleware;
 
+pub mod auth;
 pub mod root;
 pub mod tenant;
 
 pub fn router() -> Router {
     Router::new()
-        .nest("/auth", todo!("AUTH ROUTES"))
+        .nest("/auth", auth_router())
         // Authenticated routes
         .merge(
             Router::new()
@@ -20,14 +21,21 @@ pub fn router() -> Router {
         )
 }
 
-pub fn root_router() -> Router {
+fn auth_router() -> Router {
+    Router::new()
+        .route("/is-authenticated", get(auth::is_authenticated))
+        .route("/authenticate", post(auth::authenticate))
+        .route("/logout", post(auth::logout))
+}
+
+fn root_router() -> Router {
     Router::new()
         .route("/initialized", get(root::is_initialized))
         .route("/initialize", post(root::initialize))
         .route("/migrate", post(root::migrate))
 }
 
-pub fn tenant_router() -> Router {
+fn tenant_router() -> Router {
     Router::new()
         .route("/", get(tenant::get_all).post(tenant::create))
         .route(

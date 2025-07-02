@@ -1,6 +1,16 @@
 use anyhow::Context;
 use serde::Deserialize;
 
+pub struct ServerPassword(pub String);
+
+impl ServerPassword {
+    pub fn from_env() -> anyhow::Result<ServerPassword> {
+        let password = std::env::var("DOCBOX_MANAGER_PASSWORD")
+            .context("missing DOCBOX_MANAGER_PASSWORD environment variable")?;
+        Ok(ServerPassword(password))
+    }
+}
+
 #[derive(Clone, Deserialize)]
 pub struct DatabaseConfig {
     pub host: String,
