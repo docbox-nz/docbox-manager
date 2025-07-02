@@ -1,10 +1,10 @@
-import { useAuthenticated } from "@/api/auth/auth.queries";
 import type { PropsWithChildren } from "react";
-import LoginPage from "./LoginPage";
+import { useInitialized } from "@/api/root/root.queries";
 import LoadingPage from "./LoadingPage";
+import InitializePage from "./InitializePage";
 
-export function AuthGuard({ children }: PropsWithChildren<{}>) {
-  const { data, isError, isLoading } = useAuthenticated();
+export function InitializeGuard({ children }: PropsWithChildren<{}>) {
+  const { data, isError, isLoading } = useInitialized();
 
   if (isError) {
     return null;
@@ -16,7 +16,7 @@ export function AuthGuard({ children }: PropsWithChildren<{}>) {
 
   const authenticated = data ?? false;
   if (!authenticated) {
-    return <LoginPage />;
+    return <InitializePage />;
   }
 
   return children;

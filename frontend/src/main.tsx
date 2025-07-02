@@ -17,6 +17,7 @@ import "./styles.css";
 import reportWebVitals from "./reportWebVitals.ts";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { AuthGuard } from "./components/AuthGuard.tsx";
+import { InitializeGuard } from "./components/InitializeGuard.tsx";
 
 // Create a new router instance
 const router = createRouter({
@@ -52,7 +53,9 @@ if (rootElement && !rootElement.innerHTML) {
       <ThemeProvider theme={darkTheme}>
         <TanStackQueryProvider.Provider>
           <AuthGuard>
-            <RouterProvider router={router} />
+            <InitializeGuard>
+              <RouterProvider router={router} />
+            </InitializeGuard>
           </AuthGuard>
         </TanStackQueryProvider.Provider>
 

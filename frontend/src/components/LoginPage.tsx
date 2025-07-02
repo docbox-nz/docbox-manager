@@ -100,7 +100,11 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" variant="contained">
+              <Button
+                type="submit"
+                variant="contained"
+                loading={authenticateMutation.isPending}
+              >
                 Login
               </Button>
             </Stack>
