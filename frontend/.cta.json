@@ -2,7 +2,7 @@
   "projectName": "frontend",
   "mode": "file-router",
   "typescript": true,
-  "tailwind": true,
+  "tailwind": false,
   "packageManager": "npm",
   "git": true,
   "version": 1,
