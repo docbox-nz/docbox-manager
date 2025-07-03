@@ -12,9 +12,11 @@ use docbox_database::{
 use docbox_search::SearchIndexFactory;
 use serde_json::json;
 
-use crate::{DatabaseProvider, error::DynHttpError, models::tenant::CreateTenant};
+use crate::{
+    DatabaseProvider, auth::random_password, error::DynHttpError, models::tenant::CreateTenant,
+};
 
-/// POST /tenant/create
+/// POST /tenant
 ///
 /// Create a new tenant
 pub async fn create(
@@ -57,12 +59,15 @@ pub async fn create(
         .await
         .context("failed to connect to tenant database")?;
 
+    // Generate password for the database role
+    let db_role_password = random_password(30).context("failed to generate password")?;
+
     // Setup the tenant user
     create_restricted_role(
         &tenant_db,
         &tenant_config.db_name,
         &tenant_config.db_role_name,
-        &tenant_config.db_role_password,
+        &db_role_password,
     )
     .await
     .context("failed to setup tenant user")?;
@@ -71,7 +76,7 @@ pub async fn create(
     // Create and store the new database secret
     let secret_value = serde_json::to_string(&json!({
         "username": tenant_config.db_role_name,
-        "password": tenant_config.db_role_password
+        "password": db_role_password
     }))
     .context("failed to encode secret")?;
 
@@ -92,11 +97,11 @@ pub async fn create(
             name: tenant_config.name,
             db_name: tenant_config.db_name,
             db_secret_name: tenant_config.db_secret_name,
-            s3_name: tenant_config.s3_name,
-            os_index_name: tenant_config.os_index_name,
+            s3_name: tenant_config.storage_bucket_name,
+            os_index_name: tenant_config.search_index_name,
             event_queue_url: tenant_config.event_queue_url,
-            origins: tenant_config.origins,
-            s3_queue_arn: tenant_config.s3_queue_arn,
+            origins: tenant_config.storage_cors_origins,
+            s3_queue_arn: tenant_config.storage_s3_queue_arn,
             env: tenant_config.env,
         },
     )

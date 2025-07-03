@@ -5,6 +5,7 @@ use axum::{
     response::Response,
 };
 use http::request::Parts;
+use rand::{Rng, distributions::Alphanumeric, rngs::OsRng};
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
 
@@ -65,4 +66,16 @@ pub async fn auth_middleware(
     }
 
     Ok(next.run(request).await)
+}
+
+/// Generates a random password
+pub fn random_password(length: usize) -> anyhow::Result<String> {
+    let mut rng = OsRng;
+    let mut password: Vec<u8> = Vec::with_capacity(length);
+
+    for _ in 0..length {
+        password.push(rng.sample(Alphanumeric));
+    }
+
+    Ok(String::from_utf8(password)?)
 }

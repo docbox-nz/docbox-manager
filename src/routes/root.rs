@@ -1,7 +1,6 @@
-use std::sync::Arc;
-
 use crate::{
     DatabaseProvider,
+    auth::random_password,
     config::DatabaseConfig,
     error::{DynHttpError, HttpResult},
     models::root::{IsInitializedResponse, MigrateRequest},
@@ -16,9 +15,8 @@ use docbox_database::{
     models::tenant::Tenant,
     sqlx::types::Uuid,
 };
-
-use rand::{Rng, distributions::Alphanumeric, rngs::OsRng};
 use serde_json::json;
+use std::sync::Arc;
 
 /// GET /root/initialized
 ///
@@ -56,18 +54,6 @@ pub async fn is_initialized(
     }
 
     Ok(Json(IsInitializedResponse { initialized: true }))
-}
-
-/// Generates a random password
-fn random_password(length: usize) -> anyhow::Result<String> {
-    let mut rng = OsRng;
-    let mut password: Vec<u8> = Vec::with_capacity(length);
-
-    for _ in 0..length {
-        password.push(rng.sample(Alphanumeric));
-    }
-
-    Ok(String::from_utf8(password)?)
 }
 
 /// POST /root/initialize

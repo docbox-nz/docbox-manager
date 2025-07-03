@@ -3,6 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import CssBaseline from "@mui/material/CssBaseline";
+import { Toaster } from "sonner";
 
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -60,6 +61,8 @@ if (rootElement && !rootElement.innerHTML) {
         </TanStackQueryProvider.Provider>
 
         <CssBaseline enableColorScheme />
+
+        <Toaster />
       </ThemeProvider>
     </StrictMode>
   );
