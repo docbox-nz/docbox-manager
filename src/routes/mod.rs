@@ -1,6 +1,6 @@
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{any, get, post},
 };
 
 use crate::auth::auth_middleware;
@@ -41,9 +41,10 @@ fn root_router() -> Router {
 fn tenant_router() -> Router {
     Router::new()
         .route("/", get(tenant::get_all).post(tenant::create))
-        .route(
+        .nest(
             "/{env}/{tenant_id}",
-            get(tenant::get).delete(tenant::delete),
+            Router::new()
+                .route("/", get(tenant::get).delete(tenant::delete))
+                .route("/gateway/{*tail}", any(tenant::docbox_gateway)),
         )
-    // TODO: Docbox forwarding route
 }

@@ -11,6 +11,16 @@ impl ServerPassword {
     }
 }
 
+pub struct DocboxServerUrl(pub String);
+
+impl DocboxServerUrl {
+    pub fn from_env() -> anyhow::Result<DocboxServerUrl> {
+        let url = std::env::var("DOCBOX_SERVER_URL")
+            .context("missing DOCBOX_SERVER_URL environment variable")?;
+        Ok(DocboxServerUrl(url))
+    }
+}
+
 #[derive(Clone, Deserialize)]
 pub struct DatabaseConfig {
     pub host: String,

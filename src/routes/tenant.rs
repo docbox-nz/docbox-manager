@@ -1,7 +1,13 @@
-use std::sync::Arc;
+use std::{sync::Arc, usize};
 
 use anyhow::Context;
-use axum::{Extension, Json, extract::Path, http::StatusCode};
+use axum::{
+    Extension, Json,
+    body::{Body, to_bytes},
+    extract::{Path, Request},
+    http::StatusCode,
+    response::Response,
+};
 use docbox_core::{secrets::AppSecretManager, storage::StorageLayerFactory};
 use docbox_database::{
     ROOT_DATABASE_NAME,
@@ -10,10 +16,13 @@ use docbox_database::{
     sqlx::types::Uuid,
 };
 use docbox_search::SearchIndexFactory;
+use futures::TryFutureExt;
+use reqwest::Client;
 use serde_json::json;
 
 use crate::{
-    DatabaseProvider, auth::random_password, error::DynHttpError, models::tenant::CreateTenant,
+    DatabaseProvider, auth::random_password, config::DocboxServerUrl, error::DynHttpError,
+    models::tenant::CreateTenant,
 };
 
 /// POST /tenant
@@ -187,4 +196,73 @@ pub async fn delete(
     tracing::info!("tenant created successfully");
 
     Ok(StatusCode::OK)
+}
+
+/// ANY /tenant/{env}/{id}/gateway/{*tail}
+///
+/// Gateway to request resources from the docbox server
+pub async fn docbox_gateway(
+    Path((env, tenant_id, tail)): Path<(String, Uuid, String)>,
+    Extension(docbox_server): Extension<Arc<DocboxServerUrl>>,
+    request: Request,
+) -> Result<Response, DynHttpError> {
+    let (parts, body) = request.into_parts();
+
+    // Read the full body
+    let body_bytes = to_bytes(body, usize::MAX)
+        .await
+        .inspect_err(|error| tracing::error!(?error, "failed to read request body"))
+        .context("Failed to ready body")?;
+
+    // Rebuild the URI without the stripped prefix
+    let query = parts
+        .uri
+        .query()
+        .map(|q| format!("?{}", q))
+        .unwrap_or_default();
+    let new_uri = format!("{}{}{}", docbox_server.0, tail, query);
+
+    let client = Client::new();
+
+    // Build the request with headers and body
+    let mut req_builder = client
+        .request(parts.method.clone(), new_uri)
+        .body(body_bytes);
+
+    if let Some(header) = parts.headers.get("accept") {
+        req_builder = req_builder.header(hyper::header::ACCEPT, header);
+    }
+    if let Some(header) = parts.headers.get("content-type") {
+        req_builder = req_builder.header(hyper::header::CONTENT_TYPE, header);
+    }
+    if let Some(header) = parts.headers.get("content-length") {
+        req_builder = req_builder.header(hyper::header::CONTENT_LENGTH, header);
+    }
+
+    let resp = req_builder
+        .header("x-tenant-env", env)
+        .header("x-tenant-id", tenant_id.to_string())
+        .send()
+        .await
+        .inspect_err(|error| tracing::error!(?error, "failed to request docbox"))
+        .context("failed to request docbox")?;
+
+    // Build axum response
+    let mut response_builder = Response::builder().status(resp.status());
+
+    for (key, value) in resp.headers().iter() {
+        response_builder = response_builder.header(key, value);
+    }
+
+    let bytes = resp
+        .bytes()
+        .await
+        .inspect_err(|error| tracing::error!(?error, "failed to read response body"))
+        .context("failed to read response")?;
+    let response = response_builder
+        .body(Body::from(bytes))
+        .inspect_err(|error| tracing::error!(?error, "failed to create response"))
+        .context("failed to create response")?;
+
+    Ok(response)
 }

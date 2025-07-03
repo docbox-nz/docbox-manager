@@ -1,6 +1,6 @@
 import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 
-const SERVER_BASE_URL =
+export const SERVER_BASE_URL =
   import.meta.env.VITE_SERVER_BASE_URL ?? `${window.location.origin}/api/`;
 
 // Status codes to exclude from request retry

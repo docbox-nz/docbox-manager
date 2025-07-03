@@ -1,5 +1,5 @@
 use crate::{
-    config::{DatabaseConfig, ServerPassword},
+    config::{DatabaseConfig, DocboxServerUrl, ServerPassword},
     routes::router,
 };
 use axum::Extension;
@@ -51,6 +51,7 @@ async fn server() -> anyhow::Result<()> {
 
     let database_config = DatabaseConfig::from_env()?;
     let server_password = ServerPassword::from_env()?;
+    let server_url = DocboxServerUrl::from_env()?;
 
     // Initialize factories
     let secrets = AppSecretManager::from_config(&aws_config, SecretsManagerConfig::from_env()?);
@@ -73,6 +74,7 @@ async fn server() -> anyhow::Result<()> {
 
     // Setup app layers and extension
     let app = app
+        .layer(Extension(Arc::new(server_url)))
         .layer(Extension(Arc::new(server_password)))
         .layer(Extension(Arc::new(database_config)))
         .layer(Extension(Arc::new(database_provider)))

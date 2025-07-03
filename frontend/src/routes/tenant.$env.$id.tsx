@@ -1,3 +1,5 @@
+import DocboxProvider from "@/components/DocboxProvider";
+import DocumentBoxesTable from "@/components/DocumentBoxesTable";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/tenant/$env/$id")({
@@ -8,8 +10,9 @@ function RouteComponent() {
   const { env, id } = Route.useParams();
 
   return (
-    <div>
+    <DocboxProvider tenantId={id} env={env}>
       Hello "/tenant/{env}/{id}"!
-    </div>
+      <DocumentBoxesTable />
+    </DocboxProvider>
   );
 }
