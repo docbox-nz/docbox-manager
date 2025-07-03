@@ -13,6 +13,7 @@ import { Route as InitializeRouteImport } from './routes/initialize'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TenantCreateRouteImport } from './routes/tenant.create'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
+import { Route as TenantEnvIdRouteImport } from './routes/tenant.$env.$id'
 
 const InitializeRoute = InitializeRouteImport.update({
   id: '/initialize',
@@ -34,18 +35,25 @@ const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   path: '/demo/tanstack-query',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TenantEnvIdRoute = TenantEnvIdRouteImport.update({
+  id: '/tenant/$env/$id',
+  path: '/tenant/$env/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/initialize': typeof InitializeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/tenant/create': typeof TenantCreateRoute
+  '/tenant/$env/$id': typeof TenantEnvIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/initialize': typeof InitializeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/tenant/create': typeof TenantCreateRoute
+  '/tenant/$env/$id': typeof TenantEnvIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,18 +61,30 @@ export interface FileRoutesById {
   '/initialize': typeof InitializeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/tenant/create': typeof TenantCreateRoute
+  '/tenant/$env/$id': typeof TenantEnvIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/initialize' | '/demo/tanstack-query' | '/tenant/create'
+  fullPaths:
+    | '/'
+    | '/initialize'
+    | '/demo/tanstack-query'
+    | '/tenant/create'
+    | '/tenant/$env/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/initialize' | '/demo/tanstack-query' | '/tenant/create'
+  to:
+    | '/'
+    | '/initialize'
+    | '/demo/tanstack-query'
+    | '/tenant/create'
+    | '/tenant/$env/$id'
   id:
     | '__root__'
     | '/'
     | '/initialize'
     | '/demo/tanstack-query'
     | '/tenant/create'
+    | '/tenant/$env/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -72,6 +92,7 @@ export interface RootRouteChildren {
   InitializeRoute: typeof InitializeRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   TenantCreateRoute: typeof TenantCreateRoute
+  TenantEnvIdRoute: typeof TenantEnvIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -104,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoTanstackQueryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tenant/$env/$id': {
+      id: '/tenant/$env/$id'
+      path: '/tenant/$env/$id'
+      fullPath: '/tenant/$env/$id'
+      preLoaderRoute: typeof TenantEnvIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -112,6 +140,7 @@ const rootRouteChildren: RootRouteChildren = {
   InitializeRoute: InitializeRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   TenantCreateRoute: TenantCreateRoute,
+  TenantEnvIdRoute: TenantEnvIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

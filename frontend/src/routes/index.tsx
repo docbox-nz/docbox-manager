@@ -1,6 +1,6 @@
 import { useTenants } from "@/api/tenant/tenant.queries";
 import type { Tenant } from "@/api/tenant/tenant.types";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -10,6 +10,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getAPIErrorMessage } from "@/api/axios";
 import Alert from "@mui/material/Alert";
+import RouterLink from "@/components/RouterLink";
 
 export const Route = createFileRoute("/")({
   component: App,
@@ -39,6 +40,25 @@ const columns: GridColDef<Tenant>[] = [
     field: "s3_name",
     width: 300,
     headerName: "Storage Bucket Name",
+  },
+  {
+    field: "actions",
+    headerName: "Actions",
+    renderCell: ({ row }) => (
+      <Button
+        component={RouterLink}
+        to="/tenant/$env/$id"
+        params={{
+          env: row.env,
+          id: row.id,
+        }}
+        variant="contained"
+        size="small"
+        style={{ marginLeft: 16 }}
+      >
+        View
+      </Button>
+    ),
   },
 ];
 
