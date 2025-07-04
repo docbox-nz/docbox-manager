@@ -5,6 +5,10 @@ export function getTenants() {
   return httpGet<Tenant[]>("/tenant");
 }
 
+export function getTenant(env: string, tenantId: string) {
+  return httpGet<Tenant>(`/tenant/${env}/${tenantId}`);
+}
+
 export function createTenant(request: CreateTenant) {
   return httpPost("/tenant", request);
 }

@@ -1,13 +1,9 @@
 import { useDocumentBoxes } from "@/api/docbox/docbox.queries";
 import Button from "@mui/material/Button";
 import { useMemo } from "react";
-import RouterLink from "./RouterLink";
 import type { DocumentBox } from "@docbox-nz/docbox-sdk";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { getAPIErrorMessage } from "@/api/axios";
 import Box from "@mui/material/Box";
@@ -44,43 +40,30 @@ export default function DocumentBoxesTable() {
   } = useDocumentBoxes(query);
 
   return (
-    <Card sx={{ m: 3 }}>
-      <CardContent>
-        <Stack spacing={1}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: 1, py: 1 }}
-          >
-            <Typography variant="h6">Document Boxes</Typography>
-          </Stack>
+    <Stack spacing={1}>
+      {documentBoxesError && (
+        <Alert color="error">
+          Failed to load tenants: {getAPIErrorMessage(documentBoxesError)}
+        </Alert>
+      )}
 
-          {documentBoxesError && (
-            <Alert color="error">
-              Failed to load tenants: {getAPIErrorMessage(documentBoxesError)}
-            </Alert>
-          )}
-
-          <Box sx={{ mt: 3, height: 1, width: "100%" }}>
-            <DataGrid
-              loading={documentBoxesLoading}
-              rows={documentBoxes?.results ?? []}
-              columns={columns}
-              initialState={{
-                pagination: {
-                  paginationModel: {
-                    pageSize: 5,
-                  },
-                },
-              }}
-              pageSizeOptions={[5]}
-              checkboxSelection
-              disableRowSelectionOnClick
-            />
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+      <Box sx={{ mt: 3, height: 1, width: "100%" }}>
+        <DataGrid
+          loading={documentBoxesLoading}
+          rows={documentBoxes?.results ?? []}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 5,
+              },
+            },
+          }}
+          pageSizeOptions={[5]}
+          checkboxSelection
+          disableRowSelectionOnClick
+        />
+      </Box>
+    </Stack>
   );
 }
