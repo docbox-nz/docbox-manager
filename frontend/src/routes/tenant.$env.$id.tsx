@@ -12,6 +12,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getAPIErrorMessage } from "@/api/axios";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
+import CreateDocumentBoxDialog from "@/components/CreateDocumentBoxDialog";
+import { useState } from "react";
 
 export const Route = createFileRoute("/tenant/$env/$id")({
   component: RouteComponent,
@@ -24,6 +26,8 @@ function RouteComponent() {
     isLoading: tenantLoading,
     error: tenantError,
   } = useTenant(env, id);
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   if (tenantLoading) {
     return <LoadingPage />;
@@ -59,7 +63,12 @@ function RouteComponent() {
             sx={{ px: 1, py: 2 }}
           >
             <Typography variant="h6">Document Boxes</Typography>
-            <Button>Create Box</Button>
+            <Button onClick={() => setCreateOpen(true)}>Create Box</Button>
+
+            <CreateDocumentBoxDialog
+              open={createOpen}
+              onClose={() => setCreateOpen(false)}
+            />
           </Stack>
 
           <DocumentBoxesTable />

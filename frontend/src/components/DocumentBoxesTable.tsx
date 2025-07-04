@@ -30,6 +30,8 @@ const columns: GridColDef<DocumentBox>[] = [
   },
 ];
 
+const getRowId = (box: DocumentBox) => box.scope;
+
 export default function DocumentBoxesTable() {
   const query = useMemo(() => ({ offset: 0, limit: 100 }), []);
 
@@ -49,6 +51,7 @@ export default function DocumentBoxesTable() {
 
       <Box sx={{ mt: 3, height: 1, width: "100%" }}>
         <DataGrid
+          getRowId={getRowId}
           loading={documentBoxesLoading}
           rows={documentBoxes?.results ?? []}
           columns={columns}

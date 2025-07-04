@@ -8,6 +8,18 @@ export const docboxKeys = {
     boxes: {
       root: ["docbox", client, "boxes"],
       query: (query: DocumentBoxesQuery) => ["docbox", client, "boxes", query],
+      create: ["docbox", client, "box", "create"],
+      specific: {
+        root: (scope: string | null) => ["docbox", client, "box", scope],
+
+        stats: (scope: string | null) => [
+          "docbox",
+          client,
+          "box",
+          scope,
+          "stats",
+        ],
+      },
     },
   }),
 };
