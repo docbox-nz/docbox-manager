@@ -12,3 +12,12 @@ export function useDocumentBoxes(query: DocumentBoxesQuery) {
     queryFn: () => getDocumentBoxes(client, query),
   });
 }
+
+export function useDocumentBox(scope: string) {
+  const client = useDocboxClient();
+
+  return useQuery({
+    queryKey: docboxKeys.instance(client).boxes.specific.root(scope),
+    queryFn: () => client.documentBox.get(scope),
+  });
+}

@@ -1,12 +1,14 @@
 import { useDocumentBoxes } from "@/api/docbox/docbox.queries";
 import Button from "@mui/material/Button";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { DocumentBox } from "@docbox-nz/docbox-sdk";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import { getAPIErrorMessage } from "@/api/axios";
 import Box from "@mui/material/Box";
+import { useParams, useSearch } from "@tanstack/react-router";
+import RouterLink from "./RouterLink";
 
 const columns: GridColDef<DocumentBox>[] = [
   {
@@ -23,7 +25,14 @@ const columns: GridColDef<DocumentBox>[] = [
     field: "actions",
     headerName: "Actions",
     renderCell: ({ row }) => (
-      <Button variant="contained" size="small" style={{ marginLeft: 16 }}>
+      <Button
+        component={RouterLink}
+        to="."
+        search={() => ({ scope: row.scope })}
+        variant="contained"
+        size="small"
+        style={{ marginLeft: 16 }}
+      >
         View
       </Button>
     ),
