@@ -27,6 +27,9 @@ import CreateLinkDialog from "./CreateLinkDialog";
 import EditFolderDialog from "./EditFolderDialog";
 import EditLinkDialog from "./EditLinkDialog";
 import EditFileDialog from "./EditFileDialog";
+import DeleteFolderDialog from "./DeleteFolderDialog";
+import DeleteLinkDialog from "./DeleteLinkDialog";
+import DeleteFileDialog from "./DeleteFileDialog";
 
 type Props = {
   scope?: string;
@@ -116,7 +119,7 @@ export default function TenantFileBrowser({
 
   const deleteItem: DocboxItem | undefined = useMemo(() => {
     return items.find((item) => item.id === delete_id);
-  }, [items, edit_id]);
+  }, [items, delete_id]);
 
   // Document box selection
   if (scope === undefined) {
@@ -287,6 +290,37 @@ export default function TenantFileBrowser({
                     open
                     onClose={onCloseEdit}
                     file={editItem}
+                    scope={scope}
+                  />
+                )}
+              </>
+            )}
+
+            {deleteItem && (
+              <>
+                {deleteItem.type === DocboxItemType.Folder && (
+                  <DeleteFolderDialog
+                    open
+                    onClose={onCloseEdit}
+                    folder={deleteItem}
+                    scope={scope}
+                  />
+                )}
+
+                {deleteItem.type === DocboxItemType.Link && (
+                  <DeleteLinkDialog
+                    open
+                    onClose={onCloseEdit}
+                    link={deleteItem}
+                    scope={scope}
+                  />
+                )}
+
+                {deleteItem.type === DocboxItemType.File && (
+                  <DeleteFileDialog
+                    open
+                    onClose={onCloseEdit}
+                    file={deleteItem}
                     scope={scope}
                   />
                 )}
