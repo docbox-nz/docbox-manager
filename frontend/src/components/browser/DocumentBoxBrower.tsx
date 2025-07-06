@@ -1,17 +1,13 @@
+import { fData } from "@/utils/format-number";
 import {
   DocboxItemType,
   type DocboxItem,
   type ResolvedFolder,
 } from "@docbox-nz/docbox-sdk";
+import { FileTypeIcon, getFileTypeFromMime } from "@docbox-nz/docbox-ui";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useMemo } from "react";
 
@@ -22,13 +18,63 @@ type Props = {
 const columns: GridColDef<DocboxItem>[] = [
   {
     field: "id",
-    width: 300,
+    width: 200,
     headerName: "ID",
   },
   {
     field: "name",
     flex: 1,
     headerName: "Name",
+    renderCell({ row }) {
+      return (
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          sx={{ height: 1 }}
+        >
+          {row.type === DocboxItemType.File && (
+            <FileTypeIcon
+              fileType={getFileTypeFromMime(row.mime)}
+              width={32}
+              height={32}
+            />
+          )}
+
+          <Stack>
+            <Typography variant="subtitle2">{row.name}</Typography>
+            {row.type === DocboxItemType.File && (
+              <Typography variant="caption" color="text.secondary">
+                {row.mime}
+              </Typography>
+            )}
+          </Stack>
+        </Stack>
+      );
+    },
+  },
+  {
+    field: "size",
+    minWidth: 150,
+    headerName: "Size",
+    valueFormatter: (value) => fData(value),
+  },
+  {
+    field: "hash",
+    minWidth: 150,
+    headerName: "Hash (SHA256)",
+  },
+  {
+    field: "last_modified_at",
+    minWidth: 150,
+    headerName: "Last Modified At",
+    valueFormatter: (value) => value,
+  },
+  {
+    field: "created_at",
+    headerName: "Created At",
+    minWidth: 150,
+    valueFormatter: (value) => value,
   },
 ];
 
@@ -52,18 +98,18 @@ export default function DocumentBoxBrowser({ folder }: Props) {
   }, [folder]);
 
   return (
-    <Box sx={{ mt: 3, height: 1, width: "100%" }}>
+    <Box sx={{ height: 1, width: "100%" }}>
       <DataGrid
         rows={items ?? []}
         columns={columns}
         initialState={{
           pagination: {
             paginationModel: {
-              pageSize: 5,
+              pageSize: 100,
             },
           },
         }}
-        pageSizeOptions={[5]}
+        pageSizeOptions={[100]}
         checkboxSelection
         disableRowSelectionOnClick
       />

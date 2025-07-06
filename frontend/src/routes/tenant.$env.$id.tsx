@@ -13,7 +13,7 @@ import { getAPIErrorMessage } from "@/api/axios";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import CreateDocumentBoxDialog from "@/components/CreateDocumentBoxDialog";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import DocumentBoxBrowserLoader from "@/components/browser/DocumentBoxBrowerLoader";
 import UploadFileDialog from "@/components/UploadFileDialog";
@@ -36,12 +36,20 @@ export const Route = createFileRoute("/tenant/$env/$id")({
 function RouteComponent() {
   const { env, id } = Route.useParams();
   const { scope, folder } = Route.useSearch();
+  const navigate = Route.useNavigate();
 
   const {
     data: tenant,
     isLoading: tenantLoading,
     error: tenantError,
   } = useTenant(env, id);
+
+  const onClearScope = useCallback(() => {
+    navigate({
+      to: ".",
+      search: (search) => ({ ...search, scope: undefined }),
+    });
+  }, [navigate]);
 
   if (tenantLoading) {
     return <LoadingPage />;
@@ -70,7 +78,11 @@ function RouteComponent() {
 
           <Divider sx={{ mt: 2 }} />
 
-          <TenantFileBrowser scope={scope} folder_id={folder} />
+          <TenantFileBrowser
+            scope={scope}
+            folder_id={folder}
+            onClearScope={onClearScope}
+          />
         </CardContent>
       </Card>
     </DocboxProvider>

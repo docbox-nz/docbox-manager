@@ -9,15 +9,23 @@ import DocumentBoxesTable from "./DocumentBoxesTable";
 import UploadFileDialog from "./UploadFileDialog";
 import LinearProgress from "@mui/material/LinearProgress";
 import DocumentBoxBrowser from "./browser/DocumentBoxBrower";
+import IconButton from "@mui/material/IconButton";
+import MdiChevronLeft from "~icons/mdi/chevron-left";
 
 type Props = {
   scope?: string;
   folder_id?: string;
+
+  onClearScope: VoidFunction;
 };
 
 type ActiveFolder = { folder: DocFolder; children: ResolvedFolder };
 
-export default function TenantFileBrowser({ scope, folder_id }: Props) {
+export default function TenantFileBrowser({
+  scope,
+  folder_id,
+  onClearScope,
+}: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -67,7 +75,13 @@ export default function TenantFileBrowser({ scope, folder_id }: Props) {
         justifyContent="space-between"
         sx={{ px: 1, py: 2 }}
       >
-        <Typography variant="h6">{scope}</Typography>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <IconButton size="small" onClick={onClearScope}>
+            <MdiChevronLeft />
+          </IconButton>
+
+          <Typography variant="h6">{scope}</Typography>
+        </Stack>
 
         {activeFolder && (
           <>
