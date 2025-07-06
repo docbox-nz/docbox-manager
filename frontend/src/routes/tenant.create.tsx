@@ -25,6 +25,9 @@ import MdiCheckCircle from "~icons/mdi/check-circle";
 import { useCreateTenant } from "@/api/tenant/tenant.mutations";
 import { getAPIErrorMessage } from "@/api/axios";
 import { toast } from "sonner";
+import MdiChevronLeft from "~icons/mdi/chevron-left";
+import IconButton from "@mui/material/IconButton";
+import RouterLink from "@/components/RouterLink";
 
 export const Route = createFileRoute("/tenant/create")({
   component: TenantCreate,
@@ -602,7 +605,20 @@ function TenantCreate() {
     >
       <Card sx={{ maxWidth: 800, width: 1, my: 3 }}>
         <CardHeader
-          title="Create Tenant"
+          title={
+            <Stack direction="row" alignItems="center">
+              <IconButton
+                size="small"
+                sx={{ mr: 0.5 }}
+                component={RouterLink}
+                to="/"
+              >
+                <MdiChevronLeft width={32} height={32} />
+              </IconButton>
+
+              <Typography variant="inherit">Create Tenant</Typography>
+            </Stack>
+          }
           subheader="Configure the new tenant below"
           slotProps={{
             subheader: {

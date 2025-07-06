@@ -12,6 +12,9 @@ import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import { z } from "zod";
 import TenantFileBrowser from "@/components/TenantFileBrowser";
+import IconButton from "@mui/material/IconButton";
+import MdiChevronLeft from "~icons/mdi/chevron-left";
+import RouterLink from "@/components/RouterLink";
 
 const docboxSchema = z.object({
   scope: z.string().optional(),
@@ -73,9 +76,20 @@ function RouteComponent() {
       <Card sx={{ m: 3 }}>
         <CardContent>
           <Stack spacing={1}>
-            <Typography variant="h4">
-              {tenant.name} <Chip label={tenant.env} sx={{ ml: 1 }} />
-            </Typography>
+            <Stack direction="row" alignItems="center">
+              <IconButton
+                size="small"
+                sx={{ mr: 1 }}
+                component={RouterLink}
+                to="/"
+              >
+                <MdiChevronLeft width={32} height={32} />
+              </IconButton>
+              <Typography variant="h4">
+                {tenant.name} <Chip label={tenant.env} sx={{ ml: 1 }} />
+              </Typography>
+            </Stack>
+
             <Typography variant="body1" color="text.secondary">
               {tenant.id}
             </Typography>
