@@ -13,11 +13,12 @@ export function useDocumentBoxes(query: DocumentBoxesQuery) {
   });
 }
 
-export function useDocumentBox(scope: string) {
+export function useDocumentBox(scope: string | null | undefined) {
   const client = useDocboxClient();
 
   return useQuery({
+    enabled: scope !== null && scope !== undefined,
     queryKey: docboxKeys.instance(client).boxes.specific.root(scope),
-    queryFn: () => client.documentBox.get(scope),
+    queryFn: () => client.documentBox.get(scope!),
   });
 }

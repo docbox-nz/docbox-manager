@@ -13,12 +13,19 @@ import { getAPIErrorMessage } from "@/api/axios";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import CreateDocumentBoxDialog from "@/components/CreateDocumentBoxDialog";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import DocumentBoxBrowserLoader from "@/components/browser/DocumentBoxBrowerLoader";
+import UploadFileDialog from "@/components/UploadFileDialog";
+import { useDocumentBox } from "@/api/docbox/docbox.queries";
+import LinearProgress from "@mui/material/LinearProgress";
+import DocumentBoxBrowser from "@/components/browser/DocumentBoxBrower";
+import type { DocFolder, ResolvedFolder } from "@docbox-nz/docbox-sdk";
+import TenantFileBrowser from "@/components/TenantFileBrowser";
 
 const docboxSchema = z.object({
   scope: z.string().optional(),
+  folder: z.string().optional(),
 });
 
 export const Route = createFileRoute("/tenant/$env/$id")({
@@ -28,15 +35,13 @@ export const Route = createFileRoute("/tenant/$env/$id")({
 
 function RouteComponent() {
   const { env, id } = Route.useParams();
-  const { scope } = Route.useSearch();
+  const { scope, folder } = Route.useSearch();
 
   const {
     data: tenant,
     isLoading: tenantLoading,
     error: tenantError,
   } = useTenant(env, id);
-
-  const [createOpen, setCreateOpen] = useState(false);
 
   if (tenantLoading) {
     return <LoadingPage />;
@@ -65,39 +70,7 @@ function RouteComponent() {
 
           <Divider sx={{ mt: 2 }} />
 
-          {scope !== undefined ? (
-            <>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ px: 1, py: 2 }}
-              >
-                <Typography variant="h6">{scope}</Typography>
-                <Button>Upload File</Button>
-              </Stack>
-
-              <DocumentBoxBrowserLoader scope={scope} />
-            </>
-          ) : (
-            <>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ px: 1, py: 2 }}
-              >
-                <Typography variant="h6">Document Boxes</Typography>
-                <Button onClick={() => setCreateOpen(true)}>Create Box</Button>
-
-                <CreateDocumentBoxDialog
-                  open={createOpen}
-                  onClose={() => setCreateOpen(false)}
-                />
-              </Stack>
-              <DocumentBoxesTable />
-            </>
-          )}
+          <TenantFileBrowser scope={scope} folder_id={folder} />
         </CardContent>
       </Card>
     </DocboxProvider>

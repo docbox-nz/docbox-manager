@@ -28,10 +28,12 @@
     "axios": "^1.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8",
     "sonner": "^2.0.5",
     "uuid": "^11.1.0",
     "zod": "^3.25.67",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "@docbox-nz/docbox-ui": "0.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
