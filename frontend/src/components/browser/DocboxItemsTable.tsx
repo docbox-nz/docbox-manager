@@ -1,12 +1,7 @@
 import { fData } from "@/utils/format-number";
-import {
-  DocboxItemType,
-  type DocboxItem,
-  type ResolvedFolder,
-} from "@docbox-nz/docbox-sdk";
+import { DocboxItemType, type DocboxItem } from "@docbox-nz/docbox-sdk";
 import { FileTypeIcon, getFileTypeFromMime } from "@docbox-nz/docbox-ui";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import {
@@ -15,7 +10,6 @@ import {
   type GridColDef,
   type GridRowParams,
 } from "@mui/x-data-grid";
-import { useMemo } from "react";
 import RouterLink from "../RouterLink";
 import MdiInternet from "~icons/mdi/internet";
 import MdiFolder from "~icons/mdi/folder";
@@ -30,7 +24,7 @@ type Props = {
 const columns: GridColDef<DocboxItem>[] = [
   {
     field: "id",
-    width: 200,
+    maxWidth: 200,
     headerName: "ID",
   },
   {
@@ -41,6 +35,7 @@ const columns: GridColDef<DocboxItem>[] = [
   {
     field: "name",
     flex: 1,
+    minWidth: 300,
     headerName: "Name",
     renderCell({ row }) {
       return (
@@ -56,6 +51,7 @@ const columns: GridColDef<DocboxItem>[] = [
                 fileType={getFileTypeFromMime(row.mime)}
                 width={32}
                 height={32}
+                flexShrink={0}
               />
 
               <Stack>
@@ -63,7 +59,7 @@ const columns: GridColDef<DocboxItem>[] = [
                   component={RouterLink}
                   underline="hover"
                   to="."
-                  search={(search) => ({ ...search, file: row.id })}
+                  search={(search) => ({ ...search, preview: row.id })}
                   color="inherit"
                   variant="subtitle2"
                 >
@@ -79,7 +75,12 @@ const columns: GridColDef<DocboxItem>[] = [
 
           {row.type === DocboxItemType.Link && (
             <>
-              <MdiInternet width={32} height={32} />
+              <Box
+                component={MdiInternet}
+                width={32}
+                height={32}
+                flexShrink={0}
+              />
               <Stack>
                 <Link
                   underline="hover"
@@ -105,7 +106,12 @@ const columns: GridColDef<DocboxItem>[] = [
 
           {row.type === DocboxItemType.Folder && (
             <>
-              <MdiFolder width={32} height={32} />
+              <Box
+                component={MdiFolder}
+                width={32}
+                height={32}
+                flexShrink={0}
+              />
               <Stack>
                 <Link
                   component={RouterLink}
