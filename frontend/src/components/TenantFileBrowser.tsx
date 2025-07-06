@@ -11,6 +11,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import DocumentBoxBrowser from "./browser/DocumentBoxBrower";
 import IconButton from "@mui/material/IconButton";
 import MdiChevronLeft from "~icons/mdi/chevron-left";
+import CreateFolderDialog from "./CreateFolderDialog";
 
 type Props = {
   scope?: string;
@@ -27,6 +28,7 @@ export default function TenantFileBrowser({
   onClearScope,
 }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const {
@@ -84,8 +86,17 @@ export default function TenantFileBrowser({
         </Stack>
 
         {activeFolder && (
-          <>
-            <Button onClick={() => setUploadOpen(true)}>Upload File</Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              onClick={() => setCreateFolderOpen(true)}
+            >
+              Create Folder
+            </Button>
+
+            <Button variant="outlined" onClick={() => setUploadOpen(true)}>
+              Upload File
+            </Button>
 
             <UploadFileDialog
               open={uploadOpen}
@@ -93,7 +104,14 @@ export default function TenantFileBrowser({
               folder_id={activeFolder.folder.id}
               scope={scope}
             />
-          </>
+
+            <CreateFolderDialog
+              open={createFolderOpen}
+              onClose={() => setCreateFolderOpen(false)}
+              folder_id={activeFolder.folder.id}
+              scope={scope}
+            />
+          </Stack>
         )}
       </Stack>
 

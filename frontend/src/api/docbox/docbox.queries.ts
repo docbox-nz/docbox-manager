@@ -18,7 +18,7 @@ export function useDocumentBox(scope: string | null | undefined) {
 
   return useQuery({
     enabled: scope !== null && scope !== undefined,
-    queryKey: docboxKeys.instance(client).boxes.specific.root(scope),
+    queryKey: docboxKeys.instance(client).boxes.specific(scope).root,
     queryFn: () => client.documentBox.get(scope!),
   });
 }
