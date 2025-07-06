@@ -21,25 +21,27 @@ type Props = {
   scope: DocumentBoxScope;
 };
 
-export default function CreateFolderDialog({
+export default function CreateLinkDialog({
   open,
   onClose,
   folder_id,
   scope,
 }: Props) {
-  const createFolderMutation = useCreateFolder();
+  const createLinkMutation = useCreateFolder();
 
   const form = useForm({
     defaultValues: {
       name: "",
+      value: "",
     },
     validators: {
       onChange: z.object({
         name: z.string().min(1).max(255),
+        value: z.url(),
       }),
     },
     onSubmit: async ({ value }) => {
-      await createFolderMutation.mutateAsync({
+      await createLinkMutation.mutateAsync({
         data: { name: value.name, folder_id: folder_id },
         scope,
       });
@@ -56,7 +58,7 @@ export default function CreateFolderDialog({
 
   return (
     <Dialog open={open} onClose={onCloseReset} fullWidth maxWidth="xs">
-      <DialogTitle>Create Folder</DialogTitle>
+      <DialogTitle>Create Link</DialogTitle>
       <DialogContent>
         <form
           onSubmit={(e) => {
@@ -77,10 +79,21 @@ export default function CreateFolderDialog({
               )}
             />
 
-            {createFolderMutation.isError && (
+            <form.Field
+              name="value"
+              children={(field) => (
+                <FormTextField
+                  field={field}
+                  variant="outlined"
+                  size="medium"
+                  label="URL"
+                />
+              )}
+            />
+
+            {createLinkMutation.isError && (
               <Alert color="error">
-                Failed to create:{" "}
-                {getAPIErrorMessage(createFolderMutation.error)}
+                Failed to create: {getAPIErrorMessage(createLinkMutation.error)}
               </Alert>
             )}
 
@@ -91,7 +104,7 @@ export default function CreateFolderDialog({
               <Button
                 type="submit"
                 variant="contained"
-                loading={createFolderMutation.isPending}
+                loading={createLinkMutation.isPending}
               >
                 Create
               </Button>

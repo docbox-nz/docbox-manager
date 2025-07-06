@@ -18,6 +18,7 @@ import RouterLink from "./RouterLink";
 import { isNil } from "@/utils/nullable";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Link from "@mui/material/Link";
+import CreateLinkDialog from "./CreateLinkDialog";
 
 type Props = {
   scope?: string;
@@ -29,6 +30,7 @@ type ActiveFolder = { folder: DocFolder; children: ResolvedFolder };
 export default function TenantFileBrowser({ scope, folder_id }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [createLinkOpen, setCreateLinkOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const {
@@ -173,6 +175,10 @@ export default function TenantFileBrowser({ scope, folder_id }: Props) {
               Create Folder
             </Button>
 
+            <Button variant="outlined" onClick={() => setCreateLinkOpen(true)}>
+              Create Link
+            </Button>
+
             <Button variant="outlined" onClick={() => setUploadOpen(true)}>
               Upload File
             </Button>
@@ -187,6 +193,13 @@ export default function TenantFileBrowser({ scope, folder_id }: Props) {
             <CreateFolderDialog
               open={createFolderOpen}
               onClose={() => setCreateFolderOpen(false)}
+              folder_id={activeFolder.folder.id}
+              scope={scope}
+            />
+
+            <CreateLinkDialog
+              open={createLinkOpen}
+              onClose={() => setCreateLinkOpen(false)}
               folder_id={activeFolder.folder.id}
               scope={scope}
             />
