@@ -601,6 +601,7 @@ function TenantCreate() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        mb: 24,
       }}
     >
       <Card sx={{ maxWidth: 800, width: 1, my: 3 }}>
