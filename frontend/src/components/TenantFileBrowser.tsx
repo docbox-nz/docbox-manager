@@ -30,6 +30,7 @@ import EditFileDialog from "./EditFileDialog";
 import DeleteFolderDialog from "./DeleteFolderDialog";
 import DeleteLinkDialog from "./DeleteLinkDialog";
 import DeleteFileDialog from "./DeleteFileDialog";
+import FilePreviewDialog from "./FilePreviewDialog";
 
 type Props = {
   scope?: string;
@@ -301,7 +302,7 @@ export default function TenantFileBrowser({
                 {deleteItem.type === DocboxItemType.Folder && (
                   <DeleteFolderDialog
                     open
-                    onClose={onCloseEdit}
+                    onClose={onCloseDelete}
                     folder={deleteItem}
                     scope={scope}
                   />
@@ -310,7 +311,7 @@ export default function TenantFileBrowser({
                 {deleteItem.type === DocboxItemType.Link && (
                   <DeleteLinkDialog
                     open
-                    onClose={onCloseEdit}
+                    onClose={onCloseDelete}
                     link={deleteItem}
                     scope={scope}
                   />
@@ -319,12 +320,21 @@ export default function TenantFileBrowser({
                 {deleteItem.type === DocboxItemType.File && (
                   <DeleteFileDialog
                     open
-                    onClose={onCloseEdit}
+                    onClose={onCloseDelete}
                     file={deleteItem}
                     scope={scope}
                   />
                 )}
               </>
+            )}
+
+            {previewItem && previewItem.type === DocboxItemType.File && (
+              <FilePreviewDialog
+                open
+                onClose={onClosePreview}
+                file={previewItem}
+                scope={scope}
+              />
             )}
           </Stack>
         )}
