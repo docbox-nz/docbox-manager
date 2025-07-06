@@ -39,3 +39,19 @@ export function useFolder(
     queryFn: () => client.folder.get(scope!, folderId!),
   });
 }
+
+export function useFile(
+  scope: string | null | undefined,
+  fileId: string | null | undefined
+) {
+  const client = useDocboxClient();
+
+  return useQuery({
+    enabled: !isNil(scope) && !isNil(fileId),
+    queryKey: docboxKeys
+      .instance(client)
+      .boxes.specific(scope)
+      .file.specific(fileId).root,
+    queryFn: () => client.file.get(scope!, fileId!),
+  });
+}

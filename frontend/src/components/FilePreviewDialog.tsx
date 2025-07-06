@@ -1,16 +1,12 @@
-import { getAPIErrorMessage } from "@/api/axios";
-import { useDeleteFile } from "@/api/docbox/docbox.mutations";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import { useForm } from "@tanstack/react-form";
-import Stack from "@mui/material/Stack";
-import Alert from "@mui/material/Alert";
-import DialogActions from "@mui/material/DialogActions";
-import type { DocFile, DocumentBoxScope } from "@docbox-nz/docbox-sdk";
-import { toast } from "sonner";
-import Typography from "@mui/material/Typography";
+import {
+  GeneratedFileType,
+  type DocFile,
+  type DocumentBoxScope,
+} from "@docbox-nz/docbox-sdk";
+import { DocboxPdfPreviewDialog } from "@docbox-nz/docbox-ui";
+import { useDocboxClient, useDocboxEndpoint } from "./DocboxProvider";
+import { useFile } from "@/api/docbox/docbox.queries";
+import { FilePreviewType, getFilePreviewType } from "@docbox-nz/docbox-ui";
 
 type Props = {
   open: boolean;
@@ -26,10 +22,58 @@ export default function FilePreviewDialog({
   file,
   scope,
 }: Props) {
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle></DialogTitle>
-      <DialogContent></DialogContent>
-    </Dialog>
+  const { data: resolved } = useFile(scope, file.id);
+  const generatedFiles =
+    resolved?.generated?.map((generated) => generated.type) ?? [];
+
+  const client = useDocboxClient();
+
+  const previewFormat = getFilePreviewType(file.mime, generatedFiles);
+  const endpoint = useDocboxEndpoint();
+
+  const downloadURL = endpoint(
+    client.file.rawNamedURL(scope, file.id, file.name)
   );
+
+  // PDF files
+  if (previewFormat === FilePreviewType.PDF) {
+    const previewURL = endpoint(
+      client.file.rawNamedURL(scope, file.id, file.name)
+    );
+
+    return (
+      <DocboxPdfPreviewDialog
+        open={open}
+        onClose={onClose}
+        fileName={file.name}
+        previewURL={previewURL}
+        downloadURL={downloadURL}
+      />
+    );
+  }
+
+  // Support for "generated" PDFs
+  if (previewFormat === FilePreviewType.GENERATED_PDF) {
+    const previewURL = endpoint(
+      client.file.generatedRawNamedURL(
+        scope,
+        file.id,
+        GeneratedFileType.PDF,
+        file.name
+      )
+    );
+
+    return (
+      <DocboxPdfPreviewDialog
+        open={open}
+        onClose={onClose}
+        fileName={file.name}
+        previewURL={previewURL}
+        downloadURL={downloadURL}
+        generated
+      />
+    );
+  }
+
+  return null;
 }
