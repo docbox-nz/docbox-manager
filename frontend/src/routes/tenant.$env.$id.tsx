@@ -1,9 +1,7 @@
 import { useTenant } from "@/api/tenant/tenant.queries";
 import DocboxProvider from "@/components/DocboxProvider";
-import DocumentBoxesTable from "@/components/DocumentBoxesTable";
 import LoadingPage from "@/components/LoadingPage";
 import ErrorPage from "@/components/ErrorPage";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
@@ -12,15 +10,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getAPIErrorMessage } from "@/api/axios";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
-import CreateDocumentBoxDialog from "@/components/CreateDocumentBoxDialog";
-import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
-import DocumentBoxBrowserLoader from "@/components/browser/DocumentBoxBrowerLoader";
-import UploadFileDialog from "@/components/UploadFileDialog";
-import { useDocumentBox } from "@/api/docbox/docbox.queries";
-import LinearProgress from "@mui/material/LinearProgress";
-import DocumentBoxBrowser from "@/components/browser/DocumentBoxBrower";
-import type { DocFolder, ResolvedFolder } from "@docbox-nz/docbox-sdk";
 import TenantFileBrowser from "@/components/TenantFileBrowser";
 
 const docboxSchema = z.object({
@@ -36,20 +26,12 @@ export const Route = createFileRoute("/tenant/$env/$id")({
 function RouteComponent() {
   const { env, id } = Route.useParams();
   const { scope, folder } = Route.useSearch();
-  const navigate = Route.useNavigate();
 
   const {
     data: tenant,
     isLoading: tenantLoading,
     error: tenantError,
   } = useTenant(env, id);
-
-  const onClearScope = useCallback(() => {
-    navigate({
-      to: ".",
-      search: (search) => ({ ...search, scope: undefined }),
-    });
-  }, [navigate]);
 
   if (tenantLoading) {
     return <LoadingPage />;
@@ -78,11 +60,7 @@ function RouteComponent() {
 
           <Divider sx={{ mt: 2 }} />
 
-          <TenantFileBrowser
-            scope={scope}
-            folder_id={folder}
-            onClearScope={onClearScope}
-          />
+          <TenantFileBrowser scope={scope} folder_id={folder} />
         </CardContent>
       </Card>
     </DocboxProvider>

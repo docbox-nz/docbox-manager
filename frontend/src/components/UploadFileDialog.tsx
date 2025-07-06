@@ -17,6 +17,7 @@ import Box from "@mui/material/Box";
 import FormUploadFile from "./form/FormUploadFile";
 import { useCallback } from "react";
 import type { DocumentBoxScope } from "@docbox-nz/docbox-sdk";
+import { toast } from "sonner";
 
 type Props = {
   open: boolean;
@@ -72,7 +73,8 @@ export default function UploadFileDialog({
         })
       );
 
-      // await uploadFileMutation.mutateAsync({ scope: value.scope });
+      onCloseReset();
+      toast.success("Upload complete");
     },
   });
 

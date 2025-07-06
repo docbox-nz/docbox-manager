@@ -6,10 +6,12 @@ import {
 } from "@docbox-nz/docbox-sdk";
 import { FileTypeIcon, getFileTypeFromMime } from "@docbox-nz/docbox-ui";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useMemo } from "react";
+import RouterLink from "../RouterLink";
 
 type Props = {
   folder: ResolvedFolder;
@@ -75,6 +77,32 @@ const columns: GridColDef<DocboxItem>[] = [
     headerName: "Created At",
     minWidth: 150,
     valueFormatter: (value) => value,
+  },
+  {
+    field: "actions",
+    headerName: "Actions",
+    renderCell: ({ row }) => (
+      <Button
+        component={RouterLink}
+        to="."
+        search={(search) => {
+          if (row.type === DocboxItemType.Folder) {
+            return { ...search, folder: row.id };
+          }
+
+          if (row.type === DocboxItemType.File) {
+            return { ...search, file: row.id };
+          }
+
+          return { ...search };
+        }}
+        variant="contained"
+        size="small"
+        style={{ marginLeft: 16 }}
+      >
+        View
+      </Button>
+    ),
   },
 ];
 

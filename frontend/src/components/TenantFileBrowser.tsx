@@ -1,4 +1,4 @@
-import { useDocumentBox } from "@/api/docbox/docbox.queries";
+import { useDocumentBox, useFolder } from "@/api/docbox/docbox.queries";
 import type { DocFolder, ResolvedFolder } from "@docbox-nz/docbox-sdk";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -12,21 +12,21 @@ import DocumentBoxBrowser from "./browser/DocumentBoxBrower";
 import IconButton from "@mui/material/IconButton";
 import MdiChevronLeft from "~icons/mdi/chevron-left";
 import CreateFolderDialog from "./CreateFolderDialog";
+import Alert from "@mui/material/Alert";
+import { getAPIErrorMessage } from "@/api/axios";
+import RouterLink from "./RouterLink";
+import { isNil } from "@/utils/nullable";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
+import Link from "@mui/material/Link";
 
 type Props = {
   scope?: string;
   folder_id?: string;
-
-  onClearScope: VoidFunction;
 };
 
 type ActiveFolder = { folder: DocFolder; children: ResolvedFolder };
 
-export default function TenantFileBrowser({
-  scope,
-  folder_id,
-  onClearScope,
-}: Props) {
+export default function TenantFileBrowser({ scope, folder_id }: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -37,16 +37,28 @@ export default function TenantFileBrowser({
     isLoading: documentBoxLoading,
   } = useDocumentBox(scope);
 
+  const {
+    data: folder,
+    error: folderError,
+    isLoading: folderLoading,
+  } = useFolder(scope, folder_id);
+
   const activeFolder: ActiveFolder | undefined = useMemo(() => {
-    // TODO: If folder loading | error return undefined
-    // TODO: If folder return folderId
+    if (folderLoading || folderError || (!folder && !isNil(folder_id))) {
+      return undefined;
+    }
+
+    if (folder) {
+      return { folder: folder.folder, children: folder.children };
+    }
 
     if (documentBoxLoading || documentBoxError || !documentBox)
       return undefined;
 
     return { folder: documentBox.root, children: documentBox.children };
-  }, [documentBox]);
+  }, [documentBox, folder]);
 
+  // Document box selection
   if (scope === undefined) {
     return (
       <>
@@ -78,11 +90,78 @@ export default function TenantFileBrowser({
         sx={{ px: 1, py: 2 }}
       >
         <Stack direction="row" alignItems="center" spacing={1}>
-          <IconButton size="small" onClick={onClearScope}>
+          <IconButton
+            size="small"
+            component={RouterLink}
+            to="."
+            search={(search) => {
+              // Currently within a nested directory, back out
+              if (
+                activeFolder &&
+                documentBox &&
+                activeFolder.folder.folder_id !== null
+              ) {
+                const isRoot =
+                  activeFolder.folder.folder_id !== documentBox.root.id;
+
+                return {
+                  ...search,
+                  folder: isRoot
+                    ? (activeFolder.folder.folder_id ?? undefined)
+                    : undefined,
+                };
+              }
+
+              return { ...search, scope: undefined };
+            }}
+          >
             <MdiChevronLeft />
           </IconButton>
 
-          <Typography variant="h6">{scope}</Typography>
+          <Stack sx={{ pl: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link
+                underline="hover"
+                component={RouterLink}
+                to="."
+                search={(search) => ({ ...search, folder: undefined })}
+                color="inherit"
+              >
+                {scope}
+              </Link>
+
+              {activeFolder &&
+                activeFolder.children.path.map((path, index) => {
+                  if (index === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <Link
+                      key={path.id}
+                      underline="hover"
+                      component={RouterLink}
+                      to="."
+                      search={(search) => ({ ...search, folder: path.id })}
+                      color="inherit"
+                    >
+                      {path.name}
+                    </Link>
+                  );
+                })}
+              {activeFolder && activeFolder.folder.folder_id !== null && (
+                <Link
+                  underline="hover"
+                  component={RouterLink}
+                  to="."
+                  search={(search) => search}
+                  color="text.primary"
+                >
+                  {activeFolder.folder.name}
+                </Link>
+              )}
+            </Breadcrumbs>
+          </Stack>
         </Stack>
 
         {activeFolder && (
@@ -115,7 +194,20 @@ export default function TenantFileBrowser({
         )}
       </Stack>
 
+      {documentBoxError && (
+        <Alert color="error">
+          Failed to load: {getAPIErrorMessage(documentBoxError)}
+        </Alert>
+      )}
+
+      {folderError && (
+        <Alert color="error">
+          Failed to load: {getAPIErrorMessage(folderError)}
+        </Alert>
+      )}
+
       {documentBoxLoading && <LinearProgress />}
+      {folderLoading && <LinearProgress />}
       {activeFolder && <DocumentBoxBrowser folder={activeFolder.children} />}
     </>
   );

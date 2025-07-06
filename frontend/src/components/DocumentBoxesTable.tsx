@@ -28,7 +28,7 @@ const columns: GridColDef<DocumentBox>[] = [
       <Button
         component={RouterLink}
         to="."
-        search={() => ({ scope: row.scope })}
+        search={(search) => ({ ...search, scope: row.scope })}
         variant="contained"
         size="small"
         style={{ marginLeft: 16 }}
