@@ -1,5 +1,10 @@
 import { useDocumentBox, useFolder } from "@/api/docbox/docbox.queries";
-import type { DocFolder, ResolvedFolder } from "@docbox-nz/docbox-sdk";
+import {
+  DocboxItemType,
+  type DocboxItem,
+  type DocFolder,
+  type ResolvedFolder,
+} from "@docbox-nz/docbox-sdk";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -8,7 +13,7 @@ import CreateDocumentBoxDialog from "./CreateDocumentBoxDialog";
 import DocumentBoxesTable from "./DocumentBoxesTable";
 import UploadFileDialog from "./UploadFileDialog";
 import LinearProgress from "@mui/material/LinearProgress";
-import DocumentBoxBrowser from "./browser/DocumentBoxBrower";
+import DocboxItemsTable from "./browser/DocboxItemsTable";
 import IconButton from "@mui/material/IconButton";
 import MdiChevronLeft from "~icons/mdi/chevron-left";
 import CreateFolderDialog from "./CreateFolderDialog";
@@ -19,15 +24,35 @@ import { isNil } from "@/utils/nullable";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Link from "@mui/material/Link";
 import CreateLinkDialog from "./CreateLinkDialog";
+import EditFolderDialog from "./EditFolderDialog";
+import EditLinkDialog from "./EditLinkDialog";
+import EditFileDialog from "./EditFileDialog";
 
 type Props = {
   scope?: string;
   folder_id?: string;
+  preview_id?: string;
+  edit_id?: string;
+  delete_id?: string;
+
+  onClosePreview: VoidFunction;
+  onCloseEdit: VoidFunction;
+  onCloseDelete: VoidFunction;
 };
 
 type ActiveFolder = { folder: DocFolder; children: ResolvedFolder };
 
-export default function TenantFileBrowser({ scope, folder_id }: Props) {
+export default function TenantFileBrowser({
+  scope,
+  folder_id,
+  preview_id,
+  edit_id,
+  delete_id,
+
+  onClosePreview,
+  onCloseEdit,
+  onCloseDelete,
+}: Props) {
   const [createOpen, setCreateOpen] = useState(false);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [createLinkOpen, setCreateLinkOpen] = useState(false);
@@ -59,6 +84,39 @@ export default function TenantFileBrowser({ scope, folder_id }: Props) {
 
     return { folder: documentBox.root, children: documentBox.children };
   }, [documentBox, folder]);
+
+  const items: DocboxItem[] = useMemo(() => {
+    const folder = activeFolder?.children;
+    if (folder === undefined) return [];
+
+    return [
+      ...folder.folders.map(
+        (folder) =>
+          ({
+            type: DocboxItemType.Folder,
+            ...folder,
+          }) satisfies DocboxItem
+      ),
+      ...folder.files.map(
+        (file) => ({ type: DocboxItemType.File, ...file }) satisfies DocboxItem
+      ),
+      ...folder.links.map(
+        (link) => ({ type: DocboxItemType.Link, ...link }) satisfies DocboxItem
+      ),
+    ];
+  }, [activeFolder]);
+
+  const previewItem: DocboxItem | undefined = useMemo(() => {
+    return items.find((item) => item.id === preview_id);
+  }, [items, preview_id]);
+
+  const editItem: DocboxItem | undefined = useMemo(() => {
+    return items.find((item) => item.id === edit_id);
+  }, [items, edit_id]);
+
+  const deleteItem: DocboxItem | undefined = useMemo(() => {
+    return items.find((item) => item.id === delete_id);
+  }, [items, edit_id]);
 
   // Document box selection
   if (scope === undefined) {
@@ -203,6 +261,37 @@ export default function TenantFileBrowser({ scope, folder_id }: Props) {
               folder_id={activeFolder.folder.id}
               scope={scope}
             />
+
+            {editItem && (
+              <>
+                {editItem.type === DocboxItemType.Folder && (
+                  <EditFolderDialog
+                    open
+                    onClose={onCloseEdit}
+                    folder={editItem}
+                    scope={scope}
+                  />
+                )}
+
+                {editItem.type === DocboxItemType.Link && (
+                  <EditLinkDialog
+                    open
+                    onClose={onCloseEdit}
+                    link={editItem}
+                    scope={scope}
+                  />
+                )}
+
+                {editItem.type === DocboxItemType.File && (
+                  <EditFileDialog
+                    open
+                    onClose={onCloseEdit}
+                    file={editItem}
+                    scope={scope}
+                  />
+                )}
+              </>
+            )}
           </Stack>
         )}
       </Stack>
@@ -219,9 +308,8 @@ export default function TenantFileBrowser({ scope, folder_id }: Props) {
         </Alert>
       )}
 
-      {documentBoxLoading && <LinearProgress />}
-      {folderLoading && <LinearProgress />}
-      {activeFolder && <DocumentBoxBrowser folder={activeFolder.children} />}
+      {documentBoxLoading || (folderLoading && <LinearProgress />)}
+      {activeFolder && <DocboxItemsTable items={items} />}
     </>
   );
 }

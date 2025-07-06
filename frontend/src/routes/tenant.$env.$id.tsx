@@ -16,6 +16,10 @@ import TenantFileBrowser from "@/components/TenantFileBrowser";
 const docboxSchema = z.object({
   scope: z.string().optional(),
   folder: z.string().optional(),
+
+  preview: z.string().optional(),
+  edit: z.string().optional(),
+  delete: z.string().optional(),
 });
 
 export const Route = createFileRoute("/tenant/$env/$id")({
@@ -25,13 +29,32 @@ export const Route = createFileRoute("/tenant/$env/$id")({
 
 function RouteComponent() {
   const { env, id } = Route.useParams();
-  const { scope, folder } = Route.useSearch();
+  const { scope, folder, preview, edit, delete: deleteId } = Route.useSearch();
+  const navigate = Route.useNavigate();
 
   const {
     data: tenant,
     isLoading: tenantLoading,
     error: tenantError,
   } = useTenant(env, id);
+
+  const onClosePreview = () =>
+    navigate({
+      to: ".",
+      search: (search) => ({ ...search, preview: undefined }),
+    });
+
+  const onCloseEdit = () =>
+    navigate({
+      to: ".",
+      search: (search) => ({ ...search, edit: undefined }),
+    });
+
+  const onCloseDelete = () =>
+    navigate({
+      to: ".",
+      search: (search) => ({ ...search, delete: undefined }),
+    });
 
   if (tenantLoading) {
     return <LoadingPage />;
@@ -60,7 +83,16 @@ function RouteComponent() {
 
           <Divider sx={{ mt: 2 }} />
 
-          <TenantFileBrowser scope={scope} folder_id={folder} />
+          <TenantFileBrowser
+            scope={scope}
+            folder_id={folder}
+            preview_id={preview}
+            edit_id={edit}
+            delete_id={deleteId}
+            onClosePreview={onClosePreview}
+            onCloseEdit={onCloseEdit}
+            onCloseDelete={onCloseDelete}
+          />
         </CardContent>
       </Card>
     </DocboxProvider>

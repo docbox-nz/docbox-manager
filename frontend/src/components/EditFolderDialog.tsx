@@ -1,5 +1,5 @@
 import { getAPIErrorMessage } from "@/api/axios";
-import { useCreateLink } from "@/api/docbox/docbox.mutations";
+import { useUpdateFolder } from "@/api/docbox/docbox.mutations";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
@@ -10,44 +10,43 @@ import { FormTextField } from "./form/FormTextField";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import DialogActions from "@mui/material/DialogActions";
-import type { DocumentBoxScope, FolderId } from "@docbox-nz/docbox-sdk";
+import type { DocFolder, DocumentBoxScope } from "@docbox-nz/docbox-sdk";
 import { toast } from "sonner";
 
 type Props = {
   open: boolean;
   onClose: VoidFunction;
 
-  folder_id: FolderId;
+  folder: DocFolder;
   scope: DocumentBoxScope;
 };
 
-export default function CreateLinkDialog({
+export default function EditFolderDialog({
   open,
   onClose,
-  folder_id,
+  folder,
   scope,
 }: Props) {
-  const createLinkMutation = useCreateLink();
+  const updateFolder = useUpdateFolder();
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      value: "",
+      name: folder.name,
     },
     validators: {
       onChange: z.object({
         name: z.string().min(1).max(255),
-        value: z.url(),
       }),
     },
     onSubmit: async ({ value }) => {
-      await createLinkMutation.mutateAsync({
-        data: { name: value.name, folder_id: folder_id, value: value.value },
+      await updateFolder.mutateAsync({
+        folder_id: folder.id,
+        data: { name: value.name },
         scope,
       });
 
       onCloseReset();
-      toast.success("Created folder");
+      toast.success("Updated folder");
     },
   });
 
@@ -58,7 +57,7 @@ export default function CreateLinkDialog({
 
   return (
     <Dialog open={open} onClose={onCloseReset} fullWidth maxWidth="xs">
-      <DialogTitle>Create Link</DialogTitle>
+      <DialogTitle>Edit Folder</DialogTitle>
       <DialogContent>
         <form
           onSubmit={(e) => {
@@ -79,21 +78,9 @@ export default function CreateLinkDialog({
               )}
             />
 
-            <form.Field
-              name="value"
-              children={(field) => (
-                <FormTextField
-                  field={field}
-                  variant="outlined"
-                  size="medium"
-                  label="URL"
-                />
-              )}
-            />
-
-            {createLinkMutation.isError && (
+            {updateFolder.isError && (
               <Alert color="error">
-                Failed to create: {getAPIErrorMessage(createLinkMutation.error)}
+                Failed to save: {getAPIErrorMessage(updateFolder.error)}
               </Alert>
             )}
 
@@ -104,9 +91,9 @@ export default function CreateLinkDialog({
               <Button
                 type="submit"
                 variant="contained"
-                loading={createLinkMutation.isPending}
+                loading={updateFolder.isPending}
               >
-                Create
+                Save
               </Button>
             </DialogActions>
           </Stack>

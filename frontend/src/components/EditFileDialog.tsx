@@ -1,5 +1,5 @@
 import { getAPIErrorMessage } from "@/api/axios";
-import { useCreateLink } from "@/api/docbox/docbox.mutations";
+import { useUpdateFile } from "@/api/docbox/docbox.mutations";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
@@ -10,44 +10,46 @@ import { FormTextField } from "./form/FormTextField";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import DialogActions from "@mui/material/DialogActions";
-import type { DocumentBoxScope, FolderId } from "@docbox-nz/docbox-sdk";
+import type { DocFile, DocumentBoxScope } from "@docbox-nz/docbox-sdk";
 import { toast } from "sonner";
+import { getFileExtension } from "@docbox-nz/docbox-ui";
+import InputAdornment from "@mui/material/InputAdornment";
+import Typography from "@mui/material/Typography";
 
 type Props = {
   open: boolean;
   onClose: VoidFunction;
 
-  folder_id: FolderId;
+  file: DocFile;
   scope: DocumentBoxScope;
 };
 
-export default function CreateLinkDialog({
-  open,
-  onClose,
-  folder_id,
-  scope,
-}: Props) {
-  const createLinkMutation = useCreateLink();
+export default function EditFileDialog({ open, onClose, file, scope }: Props) {
+  const updateFile = useUpdateFile();
+
+  const extension = getFileExtension(file.name);
+  const nameWithoutExtension = extension
+    ? file.name.substring(0, file.name.length - (extension.length + 1))
+    : file.name;
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      value: "",
+      name: nameWithoutExtension,
     },
     validators: {
       onChange: z.object({
         name: z.string().min(1).max(255),
-        value: z.url(),
       }),
     },
     onSubmit: async ({ value }) => {
-      await createLinkMutation.mutateAsync({
-        data: { name: value.name, folder_id: folder_id, value: value.value },
+      await updateFile.mutateAsync({
+        file_id: file.id,
+        data: { name: `${value.name}.${extension}` },
         scope,
       });
 
       onCloseReset();
-      toast.success("Created folder");
+      toast.success("Updated file");
     },
   });
 
@@ -58,7 +60,7 @@ export default function CreateLinkDialog({
 
   return (
     <Dialog open={open} onClose={onCloseReset} fullWidth maxWidth="xs">
-      <DialogTitle>Create Link</DialogTitle>
+      <DialogTitle>Edit File</DialogTitle>
       <DialogContent>
         <form
           onSubmit={(e) => {
@@ -75,25 +77,24 @@ export default function CreateLinkDialog({
                   variant="outlined"
                   size="medium"
                   label="Name"
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Typography color="text.secondary">
+                            .{extension}
+                          </Typography>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
                 />
               )}
             />
 
-            <form.Field
-              name="value"
-              children={(field) => (
-                <FormTextField
-                  field={field}
-                  variant="outlined"
-                  size="medium"
-                  label="URL"
-                />
-              )}
-            />
-
-            {createLinkMutation.isError && (
+            {updateFile.isError && (
               <Alert color="error">
-                Failed to create: {getAPIErrorMessage(createLinkMutation.error)}
+                Failed to save: {getAPIErrorMessage(updateFile.error)}
               </Alert>
             )}
 
@@ -104,9 +105,9 @@ export default function CreateLinkDialog({
               <Button
                 type="submit"
                 variant="contained"
-                loading={createLinkMutation.isPending}
+                loading={updateFile.isPending}
               >
-                Create
+                Save
               </Button>
             </DialogActions>
           </Stack>
