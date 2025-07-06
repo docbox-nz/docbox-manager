@@ -1,4 +1,4 @@
-use std::{sync::Arc, usize};
+use std::sync::Arc;
 
 use anyhow::Context;
 use axum::{
@@ -16,7 +16,7 @@ use docbox_database::{
     sqlx::types::Uuid,
 };
 use docbox_search::SearchIndexFactory;
-use futures::TryFutureExt;
+use futures::TryStreamExt;
 use reqwest::Client;
 use serde_json::json;
 
@@ -222,6 +222,8 @@ pub async fn docbox_gateway(
         .unwrap_or_default();
     let new_uri = format!("{}{}{}", docbox_server.0, tail, query);
 
+    tracing::debug!(?new_uri, ?env, ?tenant_id, "forwarding request");
+
     let client = Client::new();
 
     // Build the request with headers and body
@@ -254,15 +256,15 @@ pub async fn docbox_gateway(
         response_builder = response_builder.header(key, value);
     }
 
-    let bytes = resp
-        .bytes()
-        .await
-        .inspect_err(|error| tracing::error!(?error, "failed to read response body"))
-        .context("failed to read response")?;
+    let stream = resp.bytes_stream().map_err(|e| std::io::Error::other(e));
+    let body = Body::from_stream(stream);
+
     let response = response_builder
-        .body(Body::from(bytes))
+        .body(body)
         .inspect_err(|error| tracing::error!(?error, "failed to create response"))
         .context("failed to create response")?;
+
+    tracing::debug!("HERES THE RESPONSE");
 
     Ok(response)
 }
