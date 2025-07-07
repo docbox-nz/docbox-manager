@@ -5,7 +5,7 @@ use axum::{
 };
 use embeddy::Embedded;
 use futures::future::BoxFuture;
-use hyper::{StatusCode, ext, header::CONTENT_TYPE};
+use hyper::{StatusCode, header::CONTENT_TYPE};
 use std::{
     convert::Infallible,
     path::Path,
