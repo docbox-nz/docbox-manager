@@ -6,22 +6,25 @@ use axum::{
 use crate::auth::auth_middleware;
 
 pub mod auth;
+pub mod public;
 pub mod root;
 pub mod tenant;
 
 pub fn router() -> Router {
-    Router::new().nest(
-        "/api",
-        Router::new()
-            .nest("/auth", auth_router())
-            // Authenticated routes
-            .merge(
-                Router::new()
-                    .nest("/tenant", tenant_router())
-                    .nest("/root", root_router())
-                    .layer(axum::middleware::from_fn(auth_middleware)),
-            ),
-    )
+    Router::new()
+        .nest(
+            "/api",
+            Router::new()
+                .nest("/auth", auth_router())
+                // Authenticated routes
+                .merge(
+                    Router::new()
+                        .nest("/tenant", tenant_router())
+                        .nest("/root", root_router())
+                        .layer(axum::middleware::from_fn(auth_middleware)),
+                ),
+        )
+        .fallback_service(public::PublicContent)
 }
 
 fn auth_router() -> Router {

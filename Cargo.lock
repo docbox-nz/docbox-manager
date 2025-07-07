@@ -1451,6 +1451,7 @@ dependencies = [
  "docbox-database",
  "docbox-search",
  "dotenvy",
+ "embeddy",
  "futures",
  "hyper 1.6.0",
  "hyper-util",
@@ -1463,6 +1464,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.12",
  "tokio",
+ "tower",
  "tower-http",
  "tower-sessions",
  "tracing",
@@ -1547,6 +1549,26 @@ dependencies = [
  "sec1",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "embeddy"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0d04be9188776729de8d4f5ef682f7dbfd8e86221c7284b6415b2ef86d83283"
+dependencies = [
+ "embeddy-derive",
+]
+
+[[package]]
+name = "embeddy-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf0fab0b584e67341bbfedce7c8d59d9cebaa9088fa494338ed4f8be92130bd3"
+dependencies = [
+ "quote",
+ "syn",
+ "walkdir",
 ]
 
 [[package]]
@@ -4009,7 +4031,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.9.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4860,7 +4882,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix 1.0.7",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
