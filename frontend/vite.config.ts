@@ -17,13 +17,4 @@ export default defineConfig({
       "@": resolve(__dirname, "./src"),
     },
   },
-  optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "@mui/material",
-      "@emotion/react",
-      "@emotion/styled",
-    ],
-  },
 });
