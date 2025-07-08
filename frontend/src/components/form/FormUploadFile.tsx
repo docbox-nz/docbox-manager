@@ -1,6 +1,5 @@
 import { fData } from "@/utils/format-number";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -25,7 +24,7 @@ type FileMaybeProgress = File & {
 
 export default function FormUploadFile({ field }: FormUploadFileProps) {
   const { getRootProps, getInputProps } = useDropzone({
-    onDrop(acceptedFiles, fileRejections, event) {
+    onDrop(acceptedFiles, _fileRejections, _event) {
       field.setValue((currentValue: File[]) => [
         ...currentValue,
         ...acceptedFiles,

@@ -1,6 +1,6 @@
 import { useTenants } from "@/api/tenant/tenant.queries";
 import type { Tenant } from "@/api/tenant/tenant.types";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";

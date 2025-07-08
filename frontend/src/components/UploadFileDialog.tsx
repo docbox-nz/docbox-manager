@@ -1,21 +1,15 @@
 import { getAPIErrorMessage } from "@/api/axios";
-import {
-  useCreateDocumentBox,
-  useUploadFile,
-} from "@/api/docbox/docbox.mutations";
+import { useUploadFile } from "@/api/docbox/docbox.mutations";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod/v4";
-import { FormTextField } from "./form/FormTextField";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import DialogActions from "@mui/material/DialogActions";
-import Box from "@mui/material/Box";
 import FormUploadFile from "./form/FormUploadFile";
-import { useCallback } from "react";
 import type { DocumentBoxScope } from "@docbox-nz/docbox-sdk";
 import { toast } from "sonner";
 
