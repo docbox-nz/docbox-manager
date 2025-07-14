@@ -126,8 +126,11 @@ pub struct DatabaseProvider {
     config: DatabaseConfig,
 }
 
-impl DatabaseProvider {
-    pub async fn connect(&self, database: &str) -> DbResult<PgPool> {
+impl docbox_management::database::DatabaseProvider for DatabaseProvider {
+    fn connect(
+        &self,
+        database: &str,
+    ) -> impl Future<Output = DbResult<docbox_database::DbPool>> + Send {
         connect_db(
             &self.config.host,
             self.config.port,
@@ -135,6 +138,5 @@ impl DatabaseProvider {
             &self.config.password,
             database,
         )
-        .await
     }
 }

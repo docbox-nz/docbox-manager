@@ -1386,7 +1386,7 @@ dependencies = [
 
 [[package]]
 name = "docbox-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "age",
  "anyhow",
@@ -1404,9 +1404,11 @@ dependencies = [
  "futures",
  "html-escape",
  "image",
+ "itertools 0.14.0",
  "mail-parser",
  "mime",
  "mime2ext",
+ "mime_guess",
  "moka",
  "office-convert-client",
  "pdf_process",
@@ -1425,7 +1427,7 @@ dependencies = [
 
 [[package]]
 name = "docbox-database"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "moka",
@@ -1441,6 +1443,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "docbox-management"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aws-config",
+ "docbox-core",
+ "docbox-database",
+ "docbox-search",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "tracing",
+]
+
+[[package]]
 name = "docbox-manager"
 version = "0.1.0"
 dependencies = [
@@ -1449,6 +1467,7 @@ dependencies = [
  "axum",
  "docbox-core",
  "docbox-database",
+ "docbox-management",
  "docbox-search",
  "dotenvy",
  "embeddy",
@@ -1473,7 +1492,7 @@ dependencies = [
 
 [[package]]
 name = "docbox-search"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "aws-config",
