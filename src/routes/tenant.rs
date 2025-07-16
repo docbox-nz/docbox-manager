@@ -1,4 +1,4 @@
-use crate::{DatabaseProvider, config::DocboxServerUrl, error::DynHttpError};
+use crate::{config::DocboxServerUrl, database::DatabaseProvider, error::DynHttpError};
 use anyhow::Context;
 use axum::{
     Extension, Json,

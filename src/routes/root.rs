@@ -1,6 +1,6 @@
 use crate::{
-    DatabaseProvider,
     config::DatabaseConfig,
+    database::DatabaseProvider,
     error::{DynHttpError, HttpResult},
     models::root::IsInitializedResponse,
 };

@@ -1,5 +1,6 @@
 use crate::{
     config::{DatabaseConfig, DocboxServerUrl, ServerPassword},
+    database::DatabaseProvider,
     routes::router,
 };
 use axum::Extension;
@@ -8,7 +9,6 @@ use docbox_core::{
     secrets::{AppSecretManager, SecretsManagerConfig},
     storage::{StorageLayerFactory, StorageLayerFactoryConfig},
 };
-use docbox_database::{DbResult, PgConnectOptions, PgPool};
 use docbox_search::{SearchIndexFactory, SearchIndexFactoryConfig};
 use std::{
     net::{Ipv4Addr, SocketAddr, SocketAddrV4},
@@ -19,6 +19,7 @@ use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer, cookie::time::Dur
 
 mod auth;
 mod config;
+mod database;
 mod error;
 mod logging;
 mod models;
@@ -103,40 +104,4 @@ async fn server() -> anyhow::Result<()> {
         .await?;
 
     Ok(())
-}
-
-async fn connect_db(
-    host: &str,
-    port: u16,
-    username: &str,
-    password: &str,
-    database: &str,
-) -> DbResult<PgPool> {
-    let options = PgConnectOptions::new()
-        .host(host)
-        .port(port)
-        .username(username)
-        .password(password)
-        .database(database);
-
-    PgPool::connect_with(options).await
-}
-
-pub struct DatabaseProvider {
-    config: DatabaseConfig,
-}
-
-impl docbox_management::database::DatabaseProvider for DatabaseProvider {
-    fn connect(
-        &self,
-        database: &str,
-    ) -> impl Future<Output = DbResult<docbox_database::DbPool>> + Send {
-        connect_db(
-            &self.config.host,
-            self.config.port,
-            &self.config.username,
-            &self.config.password,
-            database,
-        )
-    }
 }
