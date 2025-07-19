@@ -45,10 +45,10 @@ pub async fn create(
 pub async fn get_all(
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
 ) -> Result<Json<Vec<Tenant>>, DynHttpError> {
-    let tenant = docbox_management::tenant::get_tenants::get_tenants(db_provider.as_ref())
+    let tenants = docbox_management::tenant::get_tenants::get_tenants(db_provider.as_ref())
         .await
         .map_err(anyhow::Error::new)?;
-    Ok(Json(tenant))
+    Ok(Json(tenants))
 }
 
 /// GET /tenant/{env}/{id}
@@ -76,6 +76,26 @@ pub async fn delete(
     docbox_management::tenant::delete_tenant::delete_tenant(db_provider.as_ref(), &env, tenant_id)
         .await
         .map_err(anyhow::Error::new)?;
+    Ok(StatusCode::OK)
+}
+
+/// POST /tenant/{env}/{id}/migrate
+///
+/// Applies migrations against the tenant
+pub async fn migrate(
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
+    Path((env, tenant_id)): Path<(String, Uuid)>,
+) -> Result<StatusCode, DynHttpError> {
+    let tenant =
+        docbox_management::tenant::get_tenant::get_tenant(db_provider.as_ref(), &env, tenant_id)
+            .await
+            .map_err(anyhow::Error::new)?
+            .context("tenant not found")?;
+
+    docbox_management::tenant::migrate_tenant::migrate_tenant(db_provider.as_ref(), &tenant, None)
+        .await
+        .map_err(anyhow::Error::new)?;
+
     Ok(StatusCode::OK)
 }
 

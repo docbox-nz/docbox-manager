@@ -16,9 +16,14 @@ import MdiFolder from "~icons/mdi/folder";
 import Link from "@mui/material/Link";
 import type { LinkProps } from "@tanstack/react-router";
 import type { GridInitialStateCommunity } from "node_modules/@mui/x-data-grid/esm/models/gridStateCommunity";
+import Checkbox from "@mui/material/Checkbox";
+import { useDocboxClient } from "../DocboxProvider";
+import DocboxItemPinned from "../DocboxItemPinned";
+import { createContext, useContext, type PropsWithChildren } from "react";
 
 type Props = {
   items: DocboxItem[];
+  scope: string;
 };
 
 const columns: GridColDef<DocboxItem>[] = [
@@ -154,6 +159,18 @@ const columns: GridColDef<DocboxItem>[] = [
     valueFormatter: (value) => value,
   },
   {
+    field: "pinned",
+    headerName: "Pinned",
+    minWidth: 150,
+    renderCell({ row }) {
+      return (
+        <WithScope
+          render={({ scope }) => <DocboxItemPinned item={row} scope={scope} />}
+        />
+      );
+    },
+  },
+  {
     field: "actions",
     type: "actions",
     headerName: "Actions",
@@ -220,17 +237,31 @@ const INITIAL_STATE: GridInitialStateCommunity = {
   },
 };
 
-export default function DocboxItemsTable({ items }: Props) {
+const ScopeContext = createContext("");
+
+export default function DocboxItemsTable({ items, scope }: Props) {
   return (
     <Box sx={{ height: 1, width: "100%" }}>
-      <DataGrid
-        rows={items ?? []}
-        columns={columns}
-        initialState={INITIAL_STATE}
-        pageSizeOptions={[25, 50, 100]}
-        checkboxSelection
-        disableRowSelectionOnClick
-      />
+      <ScopeContext.Provider value={scope}>
+        <DataGrid
+          rows={items ?? []}
+          columns={columns}
+          initialState={INITIAL_STATE}
+          pageSizeOptions={[25, 50, 100]}
+          checkboxSelection
+          disableRowSelectionOnClick
+        />
+      </ScopeContext.Provider>
     </Box>
   );
+}
+
+function WithScope({
+  render,
+}: {
+  render: ({ scope }: { scope: string }) => React.ReactNode;
+}) {
+  const scope = useContext(ScopeContext);
+
+  return render({ scope });
 }

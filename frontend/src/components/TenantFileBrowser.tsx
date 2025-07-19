@@ -353,7 +353,7 @@ export default function TenantFileBrowser({
       )}
 
       {documentBoxLoading || (folderLoading && <LinearProgress />)}
-      {activeFolder && <DocboxItemsTable items={items} />}
+      {activeFolder && <DocboxItemsTable items={items} scope={scope} />}
     </>
   );
 }

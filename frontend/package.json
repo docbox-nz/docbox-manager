@@ -13,8 +13,7 @@
     "check": "biome check"
   },
   "dependencies": {
-    "@docbox-nz/docbox-sdk": "^0.4.0",
-    "@docbox-nz/docbox-ui": "0.0.0",
+    "@docbox-nz/docbox-sdk": "^0.6.0",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import { getAPIErrorMessage } from "@/api/axios";
 import Alert from "@mui/material/Alert";
 import RouterLink from "@/components/RouterLink";
+import PendingMigrationsLoader from "@/components/PendingMigrationsLoader";
 
 export const Route = createFileRoute("/")({
   component: App,
@@ -70,44 +71,48 @@ function App() {
   } = useTenants();
 
   return (
-    <Card sx={{ m: 3 }}>
-      <CardContent>
-        <Stack spacing={1}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: 1, py: 1 }}
-          >
-            <Typography variant="h6">Tenants</Typography>
-            <Button href="/tenant/create">Create Tenant</Button>
-          </Stack>
+    <>
+      <PendingMigrationsLoader />
+      <Card sx={{ m: 3 }}>
+        <CardContent>
+          <Stack spacing={1}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ px: 1, py: 1 }}
+            >
+              <Typography variant="h6">Tenants</Typography>
+              <Button href="/tenant/create">Create Tenant</Button>
+            </Stack>
 
-          {tenantsError && (
-            <Alert color="error">
-              Failed to load tenants: {getAPIErrorMessage(tenantsError)}
-            </Alert>
-          )}
+            {tenantsError && (
+              <Alert color="error">
+                Failed to load tenants: {getAPIErrorMessage(tenantsError)}
+              </Alert>
+            )}
 
-          <Box sx={{ mt: 3, height: 1, width: "100%" }}>
-            <DataGrid
-              loading={tenantsLoading}
-              rows={tenants ?? []}
-              columns={columns}
-              initialState={{
-                pagination: {
-                  paginationModel: {
-                    pageSize: 5,
+            <Box sx={{ mt: 3, height: 1, width: "100%" }}>
+              <DataGrid
+                loading={tenantsLoading}
+                rows={tenants ?? []}
+                columns={columns}
+                initialState={{
+                  pagination: {
+                    paginationModel: {
+                      pageSize: 5,
+                    },
                   },
-                },
-              }}
-              pageSizeOptions={[5]}
-              checkboxSelection
-              disableRowSelectionOnClick
-            />
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+                }}
+                pageSizeOptions={[5]}
+                checkboxSelection
+                disableRowSelectionOnClick
+                getRowId={(row) => `${row.id}-${row.env}`}
+              />
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+    </>
   );
 }

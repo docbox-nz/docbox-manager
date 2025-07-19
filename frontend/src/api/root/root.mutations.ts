@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { rootKeys } from "./root.keys";
-import { initializeRoot } from "./root.requests";
+import { initializeRoot, migrateTenants } from "./root.requests";
 import { queryClient } from "@/integrations/tanstack-query/root-provider";
 
 export function useInitialize() {
@@ -9,6 +9,16 @@ export function useInitialize() {
     mutationFn: initializeRoot,
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: rootKeys.isInitialized });
+    },
+  });
+}
+
+export function useMigrateTenants() {
+  return useMutation({
+    mutationKey: rootKeys.migrate,
+    mutationFn: migrateTenants,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: rootKeys.migrations });
     },
   });
 }

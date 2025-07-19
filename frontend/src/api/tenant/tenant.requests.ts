@@ -12,3 +12,7 @@ export function getTenant(env: string, tenantId: string) {
 export function createTenant(request: CreateTenant) {
   return httpPost("/tenant", request);
 }
+
+export function migrateTenant(env: string, tenantId: string) {
+  return httpPost(`/tenant/${env}/${tenantId}/migrate`);
+}

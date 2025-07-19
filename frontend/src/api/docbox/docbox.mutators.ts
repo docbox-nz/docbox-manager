@@ -207,6 +207,7 @@ export function mutateUpdateFile(
     ...file,
     name: data.name ?? file.name,
     folder_id: data.folder_id ?? file.folder_id,
+    pinned: data.pinned ?? file.pinned,
   });
 
   // Update the stored file
@@ -371,6 +372,7 @@ export function mutateUpdateFolder(
     ...folder,
     name: data.name ?? folder.name,
     folder_id: data.folder_id ?? folder.folder_id,
+    pinned: data.pinned ?? folder.pinned,
   });
 
   // Mutate the folder itself
@@ -566,6 +568,7 @@ export function mutateUpdateLink(
     name: data.name ?? link.name,
     value: data.value ?? link.value,
     folder_id: data.folder_id ?? link.folder_id,
+    pinned: data.pinned ?? link.pinned,
   });
 
   // Mutate the link itself

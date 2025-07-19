@@ -2,11 +2,12 @@ use crate::{
     config::DatabaseConfig,
     database::DatabaseProvider,
     error::{DynHttpError, HttpResult},
-    models::root::IsInitializedResponse,
+    models::root::{IsInitializedResponse, TenantWithMigrations},
 };
 use axum::{Extension, Json, http::StatusCode};
 use docbox_core::secrets::AppSecretManager;
 use docbox_management::tenant::migrate_tenants::MigrateTenantsConfig;
+use futures::{StreamExt, TryStreamExt, stream::FuturesOrdered};
 use std::sync::Arc;
 
 /// GET /root/initialized
@@ -40,6 +41,36 @@ pub async fn initialize(
     .await
     .map_err(anyhow::Error::new)?;
     Ok(StatusCode::CREATED)
+}
+
+/// GET /root/migrations
+///
+/// Get all tenants and any pending migrations that hey have
+pub async fn get_pending_migrations(
+    Extension(db_provider): Extension<Arc<DatabaseProvider>>,
+) -> HttpResult<Vec<TenantWithMigrations>> {
+    let tenants = docbox_management::tenant::get_tenants::get_tenants(db_provider.as_ref())
+        .await
+        .map_err(anyhow::Error::new)?;
+
+    let tenant_with_migrations = tenants
+        .into_iter()
+        .map(|tenant|{
+            let db_provider = db_provider.clone();
+            async move {
+                let pending = docbox_management::tenant::get_pending_tenant_migrations::get_pending_tenant_migrations(db_provider.as_ref(), &tenant).await?;
+                
+                anyhow::Ok(TenantWithMigrations{
+                    tenant,
+                    migrations: pending
+                })
+            }
+        })
+        .collect::<FuturesOrdered<_>>()
+        .try_collect::<Vec<TenantWithMigrations>>()
+        .await?;
+
+    Ok(Json(tenant_with_migrations))
 }
 
 /// POST /root/migrate

@@ -38,6 +38,7 @@ fn root_router() -> Router {
     Router::new()
         .route("/initialized", get(root::is_initialized))
         .route("/initialize", post(root::initialize))
+        .route("/migrations", get(root::get_pending_migrations))
         .route("/migrate", post(root::migrate))
 }
 
@@ -48,6 +49,7 @@ fn tenant_router() -> Router {
             "/{env}/{tenant_id}",
             Router::new()
                 .route("/", get(tenant::get).delete(tenant::delete))
+                .route("/migrate", post(tenant::migrate))
                 .route("/gateway/{*tail}", any(tenant::docbox_gateway)),
         )
 }
