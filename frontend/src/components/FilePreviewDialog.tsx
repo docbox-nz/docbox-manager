@@ -7,6 +7,9 @@ import { DocboxPdfPreviewDialog } from "@docbox-nz/docbox-ui";
 import { useDocboxClient, useDocboxEndpoint } from "./DocboxProvider";
 import { useFile } from "@/api/docbox/docbox.queries";
 import { FilePreviewType, getFilePreviewType } from "@docbox-nz/docbox-ui";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import Box from "@mui/material/Box";
 
 type Props = {
   open: boolean;
@@ -72,6 +75,20 @@ export default function FilePreviewDialog({
         downloadURL={downloadURL}
         generated
       />
+    );
+  }
+
+  if (previewFormat === FilePreviewType.IMAGE) {
+    const previewURL = endpoint(
+      client.file.rawNamedURL(scope, file.id, file.name)
+    );
+
+    return (
+      <Dialog open={open} onClose={onClose}>
+        <DialogContent>
+          <Box component="img" src={previewURL} />
+        </DialogContent>
+      </Dialog>
     );
   }
 
