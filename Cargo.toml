@@ -10,22 +10,11 @@ axum = { version = "=0.8.4", features = ["multipart"] }
 # HTTP layers for ratelimiting, CORS, and tracing
 tower-http = { version = "=0.6.6", features = ["limit", "cors", "trace"] }
 
-# Environment variables 
+# Environment variables
 dotenvy = "=0.15.7"
 
-docbox-management = { version = "0.1.0", path = "../docbox/packages/docbox-management" }
-
-# Core business logic
-docbox-core = { version = "0.3.0", path = "../docbox/packages/docbox-core" }
-
-# Database access
-docbox-database = { version = "0.3.0", path = "../docbox/packages/docbox-database" }
-
-# Search access
-docbox-search = { version = "0.2.0", path = "../docbox/packages/docbox-search" }
-
 # Asynchronous runtime & Helpers
-tokio = { version = "=1.45.1", features = ["full"] }
+tokio = { version = "=1.46.1", features = ["full"] }
 futures = "=0.3.31"
 
 # Serialization and JSON
@@ -48,12 +37,33 @@ thiserror = "=2.0.12"
 itertools = "=0.14.0"
 
 # AWS configuration
-aws-config = { version = "=1.8.0", features = ["behavior-version-latest"] }
+aws-config = { version = "=1.8.2", features = ["behavior-version-latest"] }
 tower-sessions = "0.14.0"
 rand = "0.8.5"
-reqwest = { version = "=0.12.20", features = ["json", "stream"] }
+reqwest = { version = "=0.12.22", features = ["json", "stream"] }
 hyper = { version = "1.6.0", features = ["full"] }
 hyper-util = { version = "0.1.14", features = ["full"] }
 tower = "0.5.2"
 # Resource embedding
 embeddy = "0.1"
+
+# Core business logic
+docbox-core = { version = "0.4.0" }
+# Database access
+docbox-database = { version = "0.4.0" }
+# Search access
+docbox-search = { version = "0.4.0" }
+# Management access
+docbox-management = { version = "0.2.0" }
+# Secrets management
+docbox-secrets = { version = "0.1.0" }
+# Storage access
+docbox-storage = { version = "0.1.0" }
+
+[patch.crates-io]
+docbox-core = { version = "0.4.0", path = "../docbox/packages/docbox-core" }
+docbox-database = { version = "0.4.0", path = "../docbox/packages/docbox-database" }
+docbox-search = { version = "0.4.0", path = "../docbox/packages/docbox-search" }
+docbox-management = { version = "0.2.0", path = "../docbox/packages/docbox-management" }
+docbox-secrets = { version = "0.1.0", path = "../docbox/packages/docbox-secrets" }
+docbox-storage = { version = "0.1.0", path = "../docbox/packages/docbox-storage" }

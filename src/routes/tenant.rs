@@ -7,10 +7,11 @@ use axum::{
     http::StatusCode,
     response::Response,
 };
-use docbox_core::{secrets::AppSecretManager, storage::StorageLayerFactory};
 use docbox_database::{models::tenant::Tenant, sqlx::types::Uuid};
 use docbox_management::tenant::create_tenant::CreateTenantConfig;
 use docbox_search::SearchIndexFactory;
+use docbox_secrets::SecretManager;
+use docbox_storage::StorageLayerFactory;
 use futures::TryStreamExt;
 use reqwest::Client;
 use std::sync::Arc;
@@ -22,7 +23,7 @@ pub async fn create(
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
     Extension(search_factory): Extension<Arc<SearchIndexFactory>>,
     Extension(storage_factory): Extension<Arc<StorageLayerFactory>>,
-    Extension(secrets): Extension<Arc<AppSecretManager>>,
+    Extension(secrets): Extension<Arc<SecretManager>>,
     Json(config): Json<CreateTenantConfig>,
 ) -> Result<StatusCode, DynHttpError> {
     tracing::debug!(?config, "creating tenant");
@@ -119,7 +120,7 @@ pub async fn docbox_gateway(
     let query = parts
         .uri
         .query()
-        .map(|q| format!("?{}", q))
+        .map(|q| format!("?{q}"))
         .unwrap_or_default();
     let new_uri = format!("{}{}{}", docbox_server.0, tail, query);
 

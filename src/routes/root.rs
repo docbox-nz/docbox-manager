@@ -5,9 +5,9 @@ use crate::{
     models::root::{IsInitializedResponse, TenantWithMigrations},
 };
 use axum::{Extension, Json, http::StatusCode};
-use docbox_core::secrets::AppSecretManager;
 use docbox_management::tenant::migrate_tenants::MigrateTenantsConfig;
-use futures::{StreamExt, TryStreamExt, stream::FuturesOrdered};
+use docbox_secrets::SecretManager;
+use futures::{TryStreamExt, stream::FuturesOrdered};
 use std::sync::Arc;
 
 /// GET /root/initialized
@@ -30,7 +30,7 @@ pub async fn is_initialized(
 /// - Setup the root database
 pub async fn initialize(
     Extension(database_config): Extension<Arc<DatabaseConfig>>,
-    Extension(secrets): Extension<Arc<AppSecretManager>>,
+    Extension(secrets): Extension<Arc<SecretManager>>,
     Extension(db_provider): Extension<Arc<DatabaseProvider>>,
 ) -> Result<StatusCode, DynHttpError> {
     docbox_management::root::initialize::initialize(
@@ -59,7 +59,7 @@ pub async fn get_pending_migrations(
             let db_provider = db_provider.clone();
             async move {
                 let pending = docbox_management::tenant::get_pending_tenant_migrations::get_pending_tenant_migrations(db_provider.as_ref(), &tenant).await?;
-                
+
                 anyhow::Ok(TenantWithMigrations{
                     tenant,
                     migrations: pending

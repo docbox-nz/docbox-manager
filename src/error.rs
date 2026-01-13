@@ -119,6 +119,7 @@ pub struct HttpErrorResponse {
 
 #[derive(Debug, Error)]
 pub enum HttpCommonError {
+    #[allow(unused)]
     #[error("internal server error")]
     ServerError,
 }

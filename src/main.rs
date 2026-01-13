@@ -4,12 +4,11 @@ use crate::{
     routes::router,
 };
 use axum::Extension;
-use docbox_core::{
-    aws::aws_config,
-    secrets::{AppSecretManager, SecretsManagerConfig},
-    storage::{StorageLayerFactory, StorageLayerFactoryConfig},
-};
+use docbox_core::aws::aws_config;
+use docbox_database::{DatabasePoolCache, DatabasePoolCacheConfig};
 use docbox_search::{SearchIndexFactory, SearchIndexFactoryConfig};
+use docbox_secrets::{SecretManager, SecretsManagerConfig};
+use docbox_storage::{StorageLayerFactory, StorageLayerFactoryConfig};
 use std::{
     net::{Ipv4Addr, SocketAddr, SocketAddrV4},
     sync::Arc,
@@ -55,9 +54,26 @@ async fn server() -> anyhow::Result<()> {
     let server_url = DocboxServerUrl::from_env()?;
 
     // Initialize factories
-    let secrets = AppSecretManager::from_config(&aws_config, SecretsManagerConfig::from_env()?);
-    let search_factory =
-        SearchIndexFactory::from_config(&aws_config, SearchIndexFactoryConfig::from_env()?)?;
+    let secrets = SecretManager::from_config(&aws_config, SecretsManagerConfig::from_env()?);
+    let secrets = Arc::new(secrets);
+
+    // Setup database cache / connector
+    let db_cache = Arc::new(DatabasePoolCache::from_config(
+        DatabasePoolCacheConfig {
+            host: database_config.host.clone(),
+            port: database_config.port,
+            root_secret_name: database_config.root_secret_name.clone(),
+            max_connections: None,
+        },
+        secrets.clone(),
+    ));
+
+    let search_factory = SearchIndexFactory::from_config(
+        &aws_config,
+        secrets.clone(),
+        db_cache,
+        SearchIndexFactoryConfig::from_env()?,
+    )?;
     let storage_factory =
         StorageLayerFactory::from_config(&aws_config, StorageLayerFactoryConfig::from_env()?);
     let database_provider = DatabaseProvider {
